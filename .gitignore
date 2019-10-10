@@ -110,5 +110,5 @@ coverage
 exports
 .cache
 build
-.env.dev
-.env.prod
+dev.env
+prod.env
