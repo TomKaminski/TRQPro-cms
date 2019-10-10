@@ -1,0 +1,50 @@
+{
+  "connection": "default",
+  "collectionName": "articles",
+  "info": {
+    "name": "article",
+    "description": "Model opisujący główną encję - artykuły, newsy itd."
+  },
+  "options": {
+    "increments": true,
+    "timestamps": [
+      "created_at",
+      "updated_at"
+    ],
+    "comment": ""
+  },
+  "attributes": {
+    "title": {
+      "minLength": 5,
+      "required": true,
+      "type": "string"
+    },
+    "content": {
+      "type": "richtext",
+      "required": true
+    },
+    "image": {
+      "model": "file",
+      "via": "related",
+      "plugin": "upload",
+      "required": true
+    },
+    "metadata": {
+      "type": "json"
+    },
+    "author": {
+      "model": "user",
+      "via": "articles",
+      "plugin": "users-permissions"
+    },
+    "category": {
+      "model": "category",
+      "via": "articles"
+    },
+    "tags": {
+      "collection": "tag",
+      "via": "articles",
+      "dominant": true
+    }
+  }
+}
