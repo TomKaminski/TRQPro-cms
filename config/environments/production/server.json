@@ -1,6 +1,6 @@
 {
-  "host": "localhost",
-  "port": "${process.env.PORT || 1337}",
+  "host": "cms.trqpro.pl",
+  "port": 80,
   "production": true,
   "proxy": {
     "enabled": false
