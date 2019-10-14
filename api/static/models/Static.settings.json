@@ -1,0 +1,29 @@
+{
+  "connection": "default",
+  "collectionName": "statics",
+  "info": {
+    "name": "static",
+    "description": "Strony statyczne jak regulamin, polityka prywatności itd"
+  },
+  "options": {
+    "increments": true,
+    "timestamps": ["created_at", "updated_at"],
+    "comment": ""
+  },
+  "attributes": {
+    "title": {
+      "unique": true,
+      "required": true,
+      "type": "string"
+    },
+    "content": {
+      "required": true,
+      "type": "richtext"
+    },
+    "key": {
+      "type": "string",
+      "unique": true,
+      "required": true
+    }
+  }
+}
