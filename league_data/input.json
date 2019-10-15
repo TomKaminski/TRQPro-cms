@@ -1,0 +1,35 @@
+{
+  "startDate": "2019-10-15T19:16:00",
+  "endDate": "2019-10-15T19:16:00",
+  "entryWalletsComputed": true,
+  "participants": [
+    {
+      "username": "tomfly",
+      "email": "example@gmail.com",
+      "apiKey": "ALLy_FYpuM6jVBD9aE7JIymp",
+      "apiSecret": "CsTBkRMGhb4XNeMtwo1Rps2AnLmyY6O_lssuf7g4muivdIkp",
+      "entryValue": 150000
+    },
+    {
+      "username": "tomfly2",
+      "email": "example@gmail.com",
+      "apiKey": "ALLy_FYpuM6jVBD9aE7JIymp2",
+      "apiSecret": "CsTBkRMGhb4XNeMtwo1Rps2AnLmyY6O_lssuf7g4muivdIkp2",
+      "entryValue": 150000
+    },
+    {
+      "username": "tomfly3",
+      "email": "example@gmail.com",
+      "apiKey": "ALLy_FYpuM6jVBD9aE7JIymp3",
+      "apiSecret": "CsTBkRMGhb4XNeMtwo1Rps2AnLmyY6O_lssuf7g4muivdIkp3",
+      "entryValue": 150000
+    },
+    {
+      "username": "tomfly4",
+      "email": "example@gmail.com",
+      "apiKey": "ALLy_FYpuM6jVBD9aE7JIymp4",
+      "apiSecret": "CsTBkRMGhb4  sdaXNeMtwo1Rps2AnLmyY6O_lssuf7g4muivdIkp4",
+      "entryValue": 150000
+    }
+  ]
+}
