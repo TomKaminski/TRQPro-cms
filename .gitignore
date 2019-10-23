@@ -112,4 +112,5 @@ exports
 build
 dev.env
 prod.env
-league_data
+league_data/*
+league_data/input.json
