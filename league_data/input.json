@@ -1,35 +1,19 @@
 {
-  "startDate": "2019-10-15T19:16:00",
-  "endDate": "2019-10-15T19:16:00",
-  "entryWalletsComputed": true,
+  "leagueUniqueIdentifier": "test_league_number_one",
+  "startDate": "2019-10-23T22:39:00+02:00",
+  "endDate": "2019-10-23T22:45:00+02:00",
   "participants": [
     {
-      "username": "tomfly",
+      "username": "james",
       "email": "example@gmail.com",
-      "apiKey": "ALLy_FYpuM6jVBD9aE7JIymp",
-      "apiSecret": "CsTBkRMGhb4XNeMtwo1Rps2AnLmyY6O_lssuf7g4muivdIkp",
-      "entryValue": 150000
+      "apiKey": "Jnvdc_AzqtslTR3eD_0sTo81",
+      "apiSecret": "N2Z9f9awMyf2VWSu3SScWJU0dfUq8kCtH0oDHHc-_rPd2sUA"
     },
     {
-      "username": "tomfly2",
+      "username": "tomkam",
       "email": "example@gmail.com",
-      "apiKey": "ALLy_FYpuM6jVBD9aE7JIymp2",
-      "apiSecret": "CsTBkRMGhb4XNeMtwo1Rps2AnLmyY6O_lssuf7g4muivdIkp2",
-      "entryValue": 150000
-    },
-    {
-      "username": "tomfly3",
-      "email": "example@gmail.com",
-      "apiKey": "ALLy_FYpuM6jVBD9aE7JIymp3",
-      "apiSecret": "CsTBkRMGhb4XNeMtwo1Rps2AnLmyY6O_lssuf7g4muivdIkp3",
-      "entryValue": 150000
-    },
-    {
-      "username": "tomfly4",
-      "email": "example@gmail.com",
-      "apiKey": "ALLy_FYpuM6jVBD9aE7JIymp4",
-      "apiSecret": "CsTBkRMGhb4  sdaXNeMtwo1Rps2AnLmyY6O_lssuf7g4muivdIkp4",
-      "entryValue": 150000
+      "apiKey": "x2zjP61p1wJ3Fz6rV6BEiDQ6",
+      "apiSecret": "2qyUPtSlm44RMMma5_5KfRvohw-HMerPtaz4xBlq2lgNrUSM"
     }
   ]
 }

@@ -5,8 +5,8 @@ const crypto = require("crypto");
 
 let inputData = require("./../../../league_data/input.json");
 
-var apiKey = "ALLy_FYpuM6jVBD9aE7JIymp";
-var apiSecret = "CsTBkRMGhb4XNeMtwo1Rps2AnLmyY6O_lssuf7g4muivdIkp";
+var apiKey = "Jnvdc_AzqtslTR3eD_0sTo81";
+var apiSecret = "N2Z9f9awMyf2VWSu3SScWJU0dfUq8kCtH0oDHHc-_rPd2sUA";
 
 module.exports = {
   index: async ctx => {
@@ -30,10 +30,12 @@ module.exports = {
 
     const requestConfig = {
       headers: headers,
-      baseURL: "https://www.bitmex.com",
+      baseURL: "https://testnet.bitmex.com",
       url: path,
       method: "GET"
     };
+
+    console.log(requestConfig);
 
     await axios
       .request(requestConfig)

@@ -112,3 +112,4 @@ exports
 build
 dev.env
 prod.env
+league_data
