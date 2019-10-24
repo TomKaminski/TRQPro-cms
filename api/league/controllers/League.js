@@ -1,49 +1,48 @@
 "use strict";
 
-const axios = require("axios");
-const crypto = require("crypto");
-
-let inputData = require("./../../../league_data/input.json");
-
-var apiKey = "Jnvdc_AzqtslTR3eD_0sTo81";
-var apiSecret = "N2Z9f9awMyf2VWSu3SScWJU0dfUq8kCtH0oDHHc-_rPd2sUA";
+const leagueInputDataFile = "./league_data/input.json";
+const fs = require("fs");
 
 module.exports = {
   index: async ctx => {
-    var verb = "GET",
-      path = "/api/v1/user/wallet?currency=XBt",
-      expires = Math.round(new Date().getTime() / 1000) + 60;
+    let rawdata = fs.readFileSync(leagueInputDataFile);
+    let leagueData = JSON.parse(rawdata);
+    let files = getReadingFiles(leagueData.leagueUniqueIdentifier);
 
-    var signature = crypto
-      .createHmac("sha256", apiSecret)
-      .update(verb + path + expires)
-      .digest("hex");
+    if (files.length === 0) {
+      ctx.send({});
+    }
 
-    var headers = {
-      "content-type": "application/json",
-      Accept: "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-      "api-expires": expires,
-      "api-key": apiKey,
-      "api-signature": signature
-    };
+    let lastFileName = files[files.length - 1];
+    let rawFiledata = fs.readFileSync(
+      "./league_data/" + leagueData.leagueUniqueIdentifier + "/" + lastFileName
+    );
+    let lastReadingData = JSON.parse(rawFiledata);
 
-    const requestConfig = {
-      headers: headers,
-      baseURL: "https://testnet.bitmex.com",
-      url: path,
-      method: "GET"
-    };
+    console.log(lastReadingData.participants);
+    let participantsArray = getValues(lastReadingData.participants);
+    lastReadingData.participants = participantsArray;
 
-    console.log(requestConfig);
-
-    await axios
-      .request(requestConfig)
-      .then(function(response) {
-        ctx.send(response.data);
-      })
-      .catch(function(error) {
-        ctx.send(error);
-      });
+    ctx.send(lastReadingData);
   }
 };
+
+function getValues(obj) {
+  var values = [];
+  for (var key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      values.push(obj[key]);
+    }
+  }
+  return values.sort(compareRoes);
+}
+
+function compareRoes(a, b) {
+  return b.roeCurrent - a.roeCurrent;
+}
+
+function getReadingFiles(leagueUniqueIdentifier) {
+  var dir = "./league_data/" + leagueUniqueIdentifier;
+  var files = fs.readdirSync(dir);
+  return files;
+}

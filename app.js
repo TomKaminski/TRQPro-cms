@@ -125,13 +125,27 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
 
   Promise.all(actions).then(responses => {
     responses.forEach(response => {
-      console.log(response);
-      if (response.status === 200) {
-        readingData.participants[response.data.account.toString()] = {
-          balance: response.data.amount,
-          prevDeposited: response.data.prevDeposited,
-          account: response.data.account,
-          deposited: response.data.deposited,
+      if (response.inner.status === 200) {
+        readingData.participants[response.inner.data.account.toString()] = {
+          balance: response.inner.data.amount,
+          prevDeposited: response.inner.data.prevDeposited,
+          account: response.inner.data.account,
+          deposited: response.inner.data.deposited,
+          username: response.participant.username,
+          email: response.participant.email,
+          startingBalance: previousReadingFileData
+            ? previousReadingFileData.participants[
+                response.inner.data.account.toString()
+              ].startingBalance
+            : response.inner.data.amount,
+          roeCurrent: getRoe(
+            previousReadingFileData
+              ? previousReadingFileData.participants[
+                  response.inner.data.account.toString()
+                ].startingBalance
+              : response.inner.data.amount,
+            response.inner.data.amount
+          ),
           roe1d: null,
           roe3d: null,
           roe7d: null,
@@ -208,9 +222,7 @@ function getEndRoe(readingData, files) {
 }
 
 function getRoe(prev, current) {
-  console.log("calculating roe...");
   let roe = (current / prev) * 100 - 100;
-  console.log(roe);
   return roe;
 }
 
@@ -235,12 +247,15 @@ async function getParticipantCurrentWalletInfo(participant) {
 
   const requestConfig = {
     headers: headers,
-    baseURL: "https://testnet.bitmex.com",
+    baseURL: "https://www.bitmex.com",
     url: path,
     method: "GET"
   };
 
-  return await axios.request(requestConfig);
+  return {
+    inner: await axios.request(requestConfig),
+    participant
+  };
 }
 
 function createReadingFileName(date) {
