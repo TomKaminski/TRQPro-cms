@@ -111,7 +111,7 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
         : leagueData.startDate
     )
   )
-    .add(1, "m")
+    .add(1, "d")
     .format();
 
   let isLastReading = new Date(leagueData.endDate) <= new Date();
