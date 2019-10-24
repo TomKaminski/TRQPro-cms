@@ -11,19 +11,22 @@ module.exports = {
 
     if (files.length === 0) {
       ctx.send({});
+    } else {
+      let lastFileName = files[files.length - 1];
+      let rawFiledata = fs.readFileSync(
+        "./league_data/" +
+          leagueData.leagueUniqueIdentifier +
+          "/" +
+          lastFileName
+      );
+      let lastReadingData = JSON.parse(rawFiledata);
+
+      console.log(lastReadingData.participants);
+      let participantsArray = getValues(lastReadingData.participants);
+      lastReadingData.participants = participantsArray;
+
+      ctx.send(lastReadingData);
     }
-
-    let lastFileName = files[files.length - 1];
-    let rawFiledata = fs.readFileSync(
-      "./league_data/" + leagueData.leagueUniqueIdentifier + "/" + lastFileName
-    );
-    let lastReadingData = JSON.parse(rawFiledata);
-
-    console.log(lastReadingData.participants);
-    let participantsArray = getValues(lastReadingData.participants);
-    lastReadingData.participants = participantsArray;
-
-    ctx.send(lastReadingData);
   }
 };
 
