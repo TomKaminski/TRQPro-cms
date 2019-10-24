@@ -42,6 +42,10 @@ fs.watch(leagueInputDataFile, (event, filename) => {
 });
 
 function setupJob() {
+  if (!fs.existsSync(leagueInputDataFile)) {
+    fs.writeFileSync(leagueInputDataFile, JSON.stringify({}));
+  }
+
   let rawdata = fs.readFileSync(leagueInputDataFile);
   let leagueData = JSON.parse(rawdata);
 
