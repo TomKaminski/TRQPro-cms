@@ -4,6 +4,11 @@
       "method": "GET",
       "path": "/league/lastReading",
       "handler": "League.index"
+    },
+    {
+      "method": "GET",
+      "path": "/league/hello",
+      "handler": "League.hello"
     }
   ]
 }

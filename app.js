@@ -6,6 +6,7 @@ const schedule = require("node-schedule");
 const axios = require("axios");
 const crypto = require("crypto");
 const moment = require("moment");
+const _ = require("lodash");
 
 moment.fn.toJSON = function() {
   return this.format();
@@ -130,31 +131,58 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
   Promise.all(actions).then(responses => {
     responses.forEach(response => {
       if (response.inner.status === 200) {
-        readingData.participants[response.inner.data.account.toString()] = {
-          balance: response.inner.data.amount,
-          prevDeposited: response.inner.data.prevDeposited,
-          account: response.inner.data.account,
-          deposited: response.inner.data.deposited,
+        let depositEntry = filterElementByKey(response.inner.data, "Deposit");
+        let transferEntry = filterElementByKey(response.inner.data, "Transfer");
+        let totalEntry = filterElementByKey(response.inner.data, "Total");
+
+        var roeCurrent = 0;
+        var startingBalance = totalEntry.amount;
+        var isRekt = false;
+        var isRetarded = false;
+
+        if (previousReadingFileData) {
+          roeCurrent = getRoe(
+            previousReadingFileData.participants[totalEntry.account.toString()]
+              .startingBalance,
+            totalEntry.amount
+          );
+
+          startingBalance =
+            previousReadingFileData.participants[totalEntry.account.toString()]
+              .startingBalance;
+
+          isRekt =
+            previousReadingFileData.participants[totalEntry.account.toString()]
+              .isRekt === true || roeCurrent < -99;
+
+          isRetarded =
+            previousReadingFileData.participants[totalEntry.account.toString()]
+              .isRetarded === true ||
+            checkIfRetarded(
+              previousReadingFileData.participants[
+                totalEntry.account.toString()
+              ],
+              depositEntry,
+              transferEntry
+            );
+        }
+
+        readingData.participants[totalEntry.account.toString()] = {
+          balance: totalEntry.amount,
+          account: totalEntry.account,
+          deposit: depositEntry,
+          transfer: transferEntry,
           username: response.participant.username,
           email: response.participant.email,
-          startingBalance: previousReadingFileData
-            ? previousReadingFileData.participants[
-                response.inner.data.account.toString()
-              ].startingBalance
-            : response.inner.data.amount,
-          roeCurrent: getRoe(
-            previousReadingFileData
-              ? previousReadingFileData.participants[
-                  response.inner.data.account.toString()
-                ].startingBalance
-              : response.inner.data.amount,
-            response.inner.data.amount
-          ),
+          startingBalance: startingBalance,
+          roeCurrent: roeCurrent,
           roe1d: null,
           roe3d: null,
           roe7d: null,
           roe14d: null,
-          roeEnd: null
+          roeEnd: null,
+          isRekt: isRekt,
+          isRetarded: isRetarded
         };
       }
     });
@@ -174,6 +202,13 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
       setupJob();
     }
   });
+}
+
+function checkIfRetarded(previousEntry, depositEntry, transferEntry) {
+  return !(
+    _.isEqual(previousEntry.deposit, depositEntry) &&
+    _.isEqual(previousEntry.transfer, transferEntry)
+  );
 }
 
 function getDayRoe(readingData, files, dayRoe, isEndRoe) {
@@ -232,7 +267,7 @@ function getRoe(prev, current) {
 
 async function getParticipantCurrentWalletInfo(participant) {
   var verb = "GET",
-    path = "/api/v1/user/wallet?currency=XBt",
+    path = "/api/v1/user/walletSummary?currency=XBt",
     expires = Math.round(new Date().getTime() / 1000) + 60;
 
   var signature = crypto
@@ -274,4 +309,10 @@ function createReadingFileName(date) {
     "_" +
     ("0" + date.getMinutes()).slice(-2);
   return "reading_" + datestring;
+}
+
+function filterElementByKey(response, key) {
+  return response.find(element => {
+    return element.transactType === key;
+  });
 }

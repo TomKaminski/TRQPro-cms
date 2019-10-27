@@ -2,8 +2,63 @@
 
 const leagueInputDataFile = "./league_data/input.json";
 const fs = require("fs");
+const axios = require("axios");
+const crypto = require("crypto");
+
+var apiKey = "KtfzIaFbquYkNTCUs7VNJYZW";
+var apiSecret = "XnYdNCCpCNkDnofcW0YeR4g5CKnGN3G8Z30_N5DfuZ-UPrg3";
+
+function filterElementByKey(response, key) {
+  return response.find(element => {
+    return element.transactType === key;
+  });
+}
 
 module.exports = {
+  hello: async ctx => {
+    var verb = "GET",
+      path = "/api/v1/user/walletSummary?currency=XBt",
+      expires = Math.round(new Date().getTime() / 1000) + 60;
+
+    var signature = crypto
+      .createHmac("sha256", apiSecret)
+      .update(verb + path + expires)
+      .digest("hex");
+
+    var headers = {
+      "content-type": "application/json",
+      Accept: "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+      "api-expires": expires,
+      "api-key": apiKey,
+      "api-signature": signature
+    };
+
+    const requestConfig = {
+      headers: headers,
+      baseURL: "https://www.bitmex.com",
+      url: path,
+      method: "GET"
+    };
+
+    await axios
+      .request(requestConfig)
+      .then(function(response) {
+        let depositEntry = filterElementByKey(response.data, "Deposit");
+        let transferEntry = filterElementByKey(response.data, "Transfer");
+        let totalEntry = filterElementByKey(response.data, "Total");
+
+        ctx.send({
+          deposit: depositEntry,
+          transfer: transferEntry,
+          total: totalEntry
+        });
+      })
+      .catch(function(error) {
+        ctx.send(error);
+      });
+  },
+
   index: async ctx => {
     let rawdata = fs.readFileSync(leagueInputDataFile);
     let leagueData = JSON.parse(rawdata);
@@ -41,6 +96,30 @@ function getValues(obj) {
 }
 
 function compareRoes(a, b) {
+  if (a.isRetarded && b.isRetarded) {
+    return b.roeCurrent - a.roeCurrent;
+  }
+
+  if (a.isRekt && b.isRekt) {
+    return b.roeCurrent - a.roeCurrent;
+  }
+
+  if (a.isRetarded) {
+    return 1;
+  }
+
+  if (b.isRetarded) {
+    return -1;
+  }
+
+  if (a.isRetarded) {
+    return 1;
+  }
+
+  if (b.isRetarded) {
+    return -1;
+  }
+
   return b.roeCurrent - a.roeCurrent;
 }
 
