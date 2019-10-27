@@ -167,6 +167,14 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
             );
         }
 
+        var nextRoes = previousReadingFileData.participants[
+          totalEntry.account.toString()
+        ].roes
+          ? previousReadingFileData.participants[totalEntry.account.toString()]
+              .roes
+          : [];
+        nextRoes.push(Math.round(roeCurrent * 1e2) / 1e2);
+
         readingData.participants[totalEntry.account.toString()] = {
           balance: totalEntry.amount,
           account: totalEntry.account,
@@ -182,7 +190,8 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
           roe14d: null,
           roeEnd: null,
           isRekt: isRekt,
-          isRetarded: isRetarded
+          isRetarded: isRetarded,
+          roes: nextRoes
         };
       }
     });
