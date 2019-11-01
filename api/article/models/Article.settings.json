@@ -46,9 +46,9 @@
       "via": "articles",
       "dominant": true
     },
-    "IsPublished": {
-      "type": "boolean",
-      "default": true
+    "isPublished": {
+      "default": true,
+      "type": "boolean"
     }
   }
 }
