@@ -45,6 +45,10 @@
       "collection": "tag",
       "via": "articles",
       "dominant": true
+    },
+    "IsPublished": {
+      "type": "boolean",
+      "default": true
     }
   }
 }
