@@ -308,11 +308,11 @@ async function getParticipantCurrentWalletInfo(participant) {
 
 function createReadingFileName(date) {
   var datestring =
-    ("0" + date.getDate()).slice(-2) +
+    date.getFullYear() +
     "_" +
     ("0" + (date.getMonth() + 1)).slice(-2) +
     "_" +
-    date.getFullYear() +
+    ("0" + date.getDate()).slice(-2) +
     "_" +
     ("0" + date.getHours()).slice(-2) +
     "_" +

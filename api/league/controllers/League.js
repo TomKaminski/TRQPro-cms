@@ -1,6 +1,8 @@
 "use strict";
 
 const leagueInputDataFile = "./league_data/input.json";
+const callForLeagueDataFile = "./league_data/call_for_league.json";
+
 const fs = require("fs");
 const axios = require("axios");
 const crypto = require("crypto");
@@ -59,6 +61,21 @@ module.exports = {
       });
   },
 
+  comingLeagues: async ctx => {
+    if (!fs.existsSync(callForLeagueDataFile)) {
+      fs.writeFileSync(
+        callForLeagueDataFile,
+        JSON.stringify({
+          coming_leagues: []
+        })
+      );
+    }
+
+    let rawdata = fs.readFileSync(callForLeagueDataFile);
+    let comingLeagues = JSON.parse(rawdata);
+    ctx.send(comingLeagues);
+  },
+
   index: async ctx => {
     let rawdata = fs.readFileSync(leagueInputDataFile);
     let leagueData = JSON.parse(rawdata);
@@ -76,7 +93,6 @@ module.exports = {
       );
       let lastReadingData = JSON.parse(rawFiledata);
 
-      console.log(lastReadingData.participants);
       let participantsArray = getValues(lastReadingData.participants);
       lastReadingData.participants = participantsArray;
 
