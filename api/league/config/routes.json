@@ -14,6 +14,11 @@
       "method": "GET",
       "path": "/league/comingLeagues",
       "handler": "League.comingLeagues"
+    },
+    {
+      "method": "POST",
+      "path": "/league/joinLeague",
+      "handler": "League.joinLeague"
     }
   ]
 }
