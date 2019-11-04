@@ -1,11 +1,10 @@
-"use strict";
-
 const leagueInputDataFile = "./league_data/input.json";
 const callForLeagueDataFile = "./league_data/call_for_league.json";
 
 const fs = require("fs");
 const axios = require("axios");
 const crypto = require("crypto");
+const encrypt_decrypt = require("../../../core/encrypt_decrypt.js");
 
 async function validateApiKeyAndSecret(apiKey, apiSecret) {
   var verb = "GET",
@@ -86,7 +85,6 @@ module.exports = {
     let callForLeagueData = JSON.parse(rawdata);
 
     let jsonBody = ctx.request.body;
-    console.log(jsonBody.league);
 
     if (
       !(
@@ -112,7 +110,7 @@ module.exports = {
         username: jsonBody.nickname,
         email: jsonBody.email,
         apiKey: jsonBody.apiKey,
-        apiSecret: jsonBody.apiSecret
+        apiSecret: validatedData.hashedApiSecret
       });
 
       fs.writeFileSync(
@@ -121,7 +119,10 @@ module.exports = {
       );
     }
 
-    ctx.send(validatedData);
+    ctx.send({
+      isValid: validatedData.isValid,
+      error: validatedData.error
+    });
   },
 
   index: async ctx => {
@@ -149,28 +150,9 @@ module.exports = {
   }
 };
 
-function encrypt(text) {
-  var cipher = crypto.createCipher("aes-256-cbc", process.env.LEAGUE_SECRET);
-  var crypted = cipher.update(text, "utf8", "hex");
-  crypted += cipher.final("hex");
-  return crypted;
-}
-
-function decrypt(text) {
-  var decipher = crypto.createDecipher(
-    "aes-256-cbc",
-    process.env.LEAGUE_SECRET
-  );
-  var dec = decipher.update(text, "hex", "utf8");
-  dec += decipher.final("utf8");
-  return dec;
-}
-
 function hashSecret(apiSecret) {
-  let encrypted = encrypt(apiSecret);
-  let decrypted = decrypt(encrypted);
-  console.log(encrypted, decrypted, apiSecret);
-  return apiSecret;
+  let encrypted = encrypt_decrypt.encrypt(apiSecret);
+  return encrypted;
 }
 
 function isNullOrEmpty(data) {
@@ -224,6 +206,7 @@ async function validateJoinLeagueData(data, participants, signingLimitDate) {
 
   return {
     isValid: true,
+    hashedApiSecret: hashedApiSecret,
     error: null
   };
 }
@@ -267,6 +250,13 @@ function compareRoes(a, b) {
 }
 
 function getReadingFiles(leagueUniqueIdentifier) {
+  if (
+    leagueUniqueIdentifier === undefined ||
+    leagueUniqueIdentifier === null ||
+    leagueUniqueIdentifier === ""
+  ) {
+    return [];
+  }
   var dir = "./league_data/" + leagueUniqueIdentifier;
   var files = fs.readdirSync(dir);
   return files;

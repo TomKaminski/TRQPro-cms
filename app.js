@@ -9,6 +9,7 @@ const axios = require("axios");
 const crypto = require("crypto");
 const moment = require("moment");
 const _ = require("lodash");
+const encrypt_decrypt = require("./core/encrypt_decrypt.js");
 
 moment.fn.toJSON = function() {
   return this.format();
@@ -141,6 +142,7 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
         var startingBalance = totalEntry.amount;
         var isRekt = false;
         var isRetarded = false;
+        var nextRoes = [0];
 
         if (previousReadingFileData) {
           roeCurrent = getRoe(
@@ -167,15 +169,16 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
               depositEntry,
               transferEntry
             );
-        }
 
-        var nextRoes = previousReadingFileData.participants[
-          totalEntry.account.toString()
-        ].roes
-          ? previousReadingFileData.participants[totalEntry.account.toString()]
-              .roes
-          : [];
-        nextRoes.push(Math.round(roeCurrent * 1e2) / 1e2);
+          nextRoes = previousReadingFileData.participants[
+            totalEntry.account.toString()
+          ].roes
+            ? previousReadingFileData.participants[
+                totalEntry.account.toString()
+              ].roes
+            : [];
+          nextRoes.push(Math.round(roeCurrent * 1e2) / 1e2);
+        }
 
         readingData.participants[totalEntry.account.toString()] = {
           balance: totalEntry.amount,
@@ -283,7 +286,7 @@ async function getParticipantCurrentWalletInfo(participant) {
     expires = Math.round(new Date().getTime() / 1000) + 60;
 
   var signature = crypto
-    .createHmac("sha256", participant.apiSecret)
+    .createHmac("sha256", encrypt_decrypt.decrypt(participant.apiSecret))
     .update(verb + path + expires)
     .digest("hex");
 
