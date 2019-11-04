@@ -37,7 +37,6 @@ async function validateApiKeyAndSecret(apiKey, apiSecret) {
     if (res.status === 200) {
       return true;
     } else {
-      console.log(data);
       return false;
     }
   } catch (error) {
