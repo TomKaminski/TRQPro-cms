@@ -1,5 +1,7 @@
 "use strict";
 
+require("dotenv").config();
+
 const fs = require("fs");
 const md5 = require("md5");
 const schedule = require("node-schedule");
@@ -112,7 +114,7 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
         : leagueData.startDate
     )
   )
-    .add(1, "d")
+    .add(1, "m")
     .format();
 
   let isLastReading = new Date(leagueData.endDate) <= new Date();
@@ -203,6 +205,7 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
 
     if (isLastReading) {
       readingData = getEndRoe(readingData, filesInfo);
+      readingData.hasEnded = true;
     }
 
     saveReadingFile(leagueData.leagueUniqueIdentifier, readingData);

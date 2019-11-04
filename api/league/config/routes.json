@@ -7,11 +7,6 @@
     },
     {
       "method": "GET",
-      "path": "/league/hello",
-      "handler": "League.hello"
-    },
-    {
-      "method": "GET",
       "path": "/league/comingLeagues",
       "handler": "League.comingLeagues"
     },

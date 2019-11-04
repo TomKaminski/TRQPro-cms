@@ -7,60 +7,49 @@ const fs = require("fs");
 const axios = require("axios");
 const crypto = require("crypto");
 
-var apiKey = "KtfzIaFbquYkNTCUs7VNJYZW";
-var apiSecret = "XnYdNCCpCNkDnofcW0YeR4g5CKnGN3G8Z30_N5DfuZ-UPrg3";
+async function validateApiKeyAndSecret(apiKey, apiSecret) {
+  var verb = "GET",
+    path = "/api/v1/user/walletSummary?currency=XBt",
+    expires = Math.round(new Date().getTime() / 1000) + 60;
 
-function filterElementByKey(response, key) {
-  return response.find(element => {
-    return element.transactType === key;
-  });
+  var signature = crypto
+    .createHmac("sha256", apiSecret)
+    .update(verb + path + expires)
+    .digest("hex");
+
+  var headers = {
+    "content-type": "application/json",
+    Accept: "application/json",
+    "X-Requested-With": "XMLHttpRequest",
+    "api-expires": expires,
+    "api-key": apiKey,
+    "api-signature": signature
+  };
+
+  const requestConfig = {
+    headers: headers,
+    baseURL: "https://www.bitmex.com",
+    url: path,
+    method: "GET"
+  };
+
+  try {
+    let res = await axios.request(requestConfig);
+    let { data } = res;
+    let totalKey = filterElementByKey(data, "Total");
+    if (totalKey != undefined && totalKey.account != null) {
+      return true;
+    } else {
+      console.log(data);
+      return false;
+    }
+  } catch (error) {
+    console.log(error.response);
+    return false;
+  }
 }
 
 module.exports = {
-  hello: async ctx => {
-    var verb = "GET",
-      path = "/api/v1/user/walletSummary?currency=XBt",
-      expires = Math.round(new Date().getTime() / 1000) + 60;
-
-    var signature = crypto
-      .createHmac("sha256", apiSecret)
-      .update(verb + path + expires)
-      .digest("hex");
-
-    var headers = {
-      "content-type": "application/json",
-      Accept: "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-      "api-expires": expires,
-      "api-key": apiKey,
-      "api-signature": signature
-    };
-
-    const requestConfig = {
-      headers: headers,
-      baseURL: "https://www.bitmex.com",
-      url: path,
-      method: "GET"
-    };
-
-    await axios
-      .request(requestConfig)
-      .then(function(response) {
-        let depositEntry = filterElementByKey(response.data, "Deposit");
-        let transferEntry = filterElementByKey(response.data, "Transfer");
-        let totalEntry = filterElementByKey(response.data, "Total");
-
-        ctx.send({
-          deposit: depositEntry,
-          transfer: transferEntry,
-          total: totalEntry
-        });
-      })
-      .catch(function(error) {
-        ctx.send(error);
-      });
-  },
-
   comingLeagues: async ctx => {
     if (!fs.existsSync(callForLeagueDataFile)) {
       fs.writeFileSync(
@@ -112,7 +101,7 @@ module.exports = {
       return;
     }
 
-    let validatedData = validateJoinLeagueData(
+    let validatedData = await validateJoinLeagueData(
       jsonBody,
       callForLeagueData.coming_leagues[jsonBody.league].participants,
       callForLeagueData.coming_leagues[jsonBody.league].signingLimitDate
@@ -160,20 +149,35 @@ module.exports = {
   }
 };
 
-function validateKeys(key, secret) {
-  return true;
+function encrypt(text) {
+  var cipher = crypto.createCipher("aes-256-cbc", process.env.LEAGUE_SECRET);
+  var crypted = cipher.update(text, "utf8", "hex");
+  crypted += cipher.final("hex");
+  return crypted;
 }
 
-function hashSecret(secret) {
-  return secret;
+function decrypt(text) {
+  var decipher = crypto.createDecipher(
+    "aes-256-cbc",
+    process.env.LEAGUE_SECRET
+  );
+  var dec = decipher.update(text, "hex", "utf8");
+  dec += decipher.final("utf8");
+  return dec;
+}
+
+function hashSecret(apiSecret) {
+  let encrypted = encrypt(apiSecret);
+  let decrypted = decrypt(encrypted);
+  console.log(encrypted, decrypted, apiSecret);
+  return apiSecret;
 }
 
 function isNullOrEmpty(data) {
-  console.log(data);
   return data === undefined || data === null || data === "";
 }
 
-function validateJoinLeagueData(data, participants, signingLimitDate) {
+async function validateJoinLeagueData(data, participants, signingLimitDate) {
   if (
     isNullOrEmpty(data.apiSecret) ||
     isNullOrEmpty(data.apiKey) ||
@@ -193,7 +197,7 @@ function validateJoinLeagueData(data, participants, signingLimitDate) {
     };
   }
 
-  if (validateKeys(data.apiKey, data.apiSecret) === false) {
+  if ((await validateApiKeyAndSecret(data.apiKey, data.apiSecret)) === false) {
     return {
       isValid: false,
       error: "Podane klucze API są nieprawidłowe."
@@ -266,4 +270,10 @@ function getReadingFiles(leagueUniqueIdentifier) {
   var dir = "./league_data/" + leagueUniqueIdentifier;
   var files = fs.readdirSync(dir);
   return files;
+}
+
+function filterElementByKey(response, key) {
+  return response.find(element => {
+    return element.transactType === key;
+  });
 }
