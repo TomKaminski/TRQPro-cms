@@ -34,9 +34,7 @@ async function validateApiKeyAndSecret(apiKey, apiSecret) {
 
   try {
     let res = await axios.request(requestConfig);
-    let { data } = res;
-    let totalKey = filterElementByKey(data, "Total");
-    if (totalKey != undefined && totalKey.account != null) {
+    if (res.status === 200) {
       return true;
     } else {
       console.log(data);
