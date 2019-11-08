@@ -5,6 +5,7 @@ const fs = require("fs");
 const axios = require("axios");
 const crypto = require("crypto");
 const encrypt_decrypt = require("../../../core/encrypt_decrypt.js");
+const moment = require("moment");
 
 async function validateApiKeyAndSecret(apiKey, apiSecret) {
   var verb = "GET",
@@ -127,8 +128,11 @@ module.exports = {
     let leagueData = JSON.parse(rawdata);
     let files = getReadingFiles(leagueData.leagueUniqueIdentifier);
 
-    if (files.length === 0) {
-      ctx.send({});
+    let endDate = moment(new Date(leagueData.endDate));
+    let now = moment(new Date());
+
+    if (files.length === 0 || endDate.diff(now, "days") <= -3) {
+      ctx.send(tryGetNearestComingLeague());
     } else {
       let lastFileName = files[files.length - 1];
       let rawFiledata = fs.readFileSync(
@@ -146,6 +150,45 @@ module.exports = {
     }
   }
 };
+
+function tryGetNearestComingLeague() {
+  let rawdata = fs.readFileSync(callForLeagueDataFile);
+  let callForLeagueData = JSON.parse(rawdata);
+  let comingLeagues = callForLeagueData.coming_leagues;
+
+  for (var k in comingLeagues) {
+    if (comingLeagues.hasOwnProperty(k)) {
+      let {
+        id,
+        name,
+        startDate,
+        endDate,
+        signingLimitDate,
+        participants
+      } = comingLeagues[k];
+      let participantsResult = [];
+
+      participants.forEach(participant => {
+        delete participant.apiKey;
+        delete participant.apiSecret;
+
+        participantsResult.push(participant);
+      });
+
+      let result = {
+        isComingLeague: true,
+        leagueUniqueIdentifier: id,
+        participants: participantsResult,
+        name,
+        startDate,
+        endDate,
+        signingLimitDate
+      };
+      return result;
+    }
+  }
+  return {};
+}
 
 function hashSecret(apiSecret) {
   let encrypted = encrypt_decrypt.encrypt(apiSecret);
