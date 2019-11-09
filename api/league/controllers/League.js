@@ -270,6 +270,10 @@ function compareRoes(a, b) {
     return b.roeCurrent - a.roeCurrent;
   }
 
+  if (a.tooLowBalance && b.tooLowBalance) {
+    return b.roeCurrent - a.roeCurrent;
+  }
+
   if (a.isRetarded) {
     return 1;
   }
@@ -278,11 +282,19 @@ function compareRoes(a, b) {
     return -1;
   }
 
-  if (a.isRetarded) {
+  if (a.tooLowBalance) {
     return 1;
   }
 
-  if (b.isRetarded) {
+  if (b.tooLowBalance) {
+    return -1;
+  }
+
+  if (a.isRekt) {
+    return 1;
+  }
+
+  if (b.isRekt) {
     return -1;
   }
 

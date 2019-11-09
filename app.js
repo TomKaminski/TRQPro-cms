@@ -143,17 +143,12 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
         var isRekt = false;
         var isRetarded = false;
         var nextRoes = [0];
+        var tooLowBalance = false;
 
         if (previousReadingFileData) {
-          roeCurrent = getRoe(
+          tooLowBalance =
             previousReadingFileData.participants[totalEntry.account.toString()]
-              .startingBalance,
-            totalEntry.amount
-          );
-
-          startingBalance =
-            previousReadingFileData.participants[totalEntry.account.toString()]
-              .startingBalance;
+              .tooLowBalance === true || false;
 
           isRekt =
             previousReadingFileData.participants[totalEntry.account.toString()]
@@ -170,6 +165,16 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
               transferEntry
             );
 
+          roeCurrent = getRoe(
+            previousReadingFileData.participants[totalEntry.account.toString()]
+              .startingBalance,
+            totalEntry.amount
+          );
+
+          startingBalance =
+            previousReadingFileData.participants[totalEntry.account.toString()]
+              .startingBalance;
+
           nextRoes = previousReadingFileData.participants[
             totalEntry.account.toString()
           ].roes
@@ -178,6 +183,10 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
               ].roes
             : [];
           nextRoes.push(Math.round(roeCurrent * 1e2) / 1e2);
+        } else {
+          if (startingBalance < 500000) {
+            tooLowBalance = true;
+          }
         }
 
         readingData.participants[totalEntry.account.toString()] = {
@@ -194,8 +203,9 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
           roe7d: null,
           roe14d: null,
           roeEnd: null,
-          isRekt: isRekt,
-          isRetarded: isRetarded,
+          isRekt,
+          isRetarded,
+          tooLowBalance,
           roes: nextRoes
         };
       }
@@ -238,8 +248,13 @@ function getDayRoe(readingData, files, dayRoe, isEndRoe) {
     );
 
     let historicalData = JSON.parse(rawFiledata);
+    let participantsToCompute = _.filter(readingData.participants, item => {
+      return !item.isRekt && !item.isRetarded && !item.tooLowBalance;
+    });
 
-    for (var key in readingData.participants) {
+    console.log("participants to compute:", participantsToCompute.length);
+
+    for (var key in participantsToCompute) {
       if (
         readingData.participants.hasOwnProperty(key) &&
         historicalData.participants.hasOwnProperty(key)
