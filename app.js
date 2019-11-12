@@ -6,7 +6,6 @@ const fs = require("fs");
 const md5 = require("md5");
 const schedule = require("node-schedule");
 const axios = require("axios");
-const crypto = require("crypto");
 const moment = require("moment");
 const _ = require("lodash");
 const encrypt_decrypt = require("./core/encrypt_decrypt.js");
