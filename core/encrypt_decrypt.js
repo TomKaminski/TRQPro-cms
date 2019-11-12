@@ -17,7 +17,15 @@ function decrypt(text) {
   return dec;
 }
 
+function getBitmexSignature(apiSecret, verb, path, expires) {
+  return crypto
+    .createHmac("sha256", apiSecret)
+    .update(verb + path + expires)
+    .digest("hex");
+}
+
 module.exports = {
   encrypt,
-  decrypt
+  decrypt,
+  getBitmexSignature
 };

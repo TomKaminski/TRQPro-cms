@@ -1,63 +1,22 @@
-const leagueInputDataFile = "./league_data/input.json";
-const callForLeagueDataFile = "./league_data/call_for_league.json";
-
 const fs = require("fs");
 const axios = require("axios");
-const crypto = require("crypto");
-const encrypt_decrypt = require("../../../core/encrypt_decrypt.js");
 const moment = require("moment");
 
-async function validateApiKeyAndSecret(apiKey, apiSecret) {
-  var verb = "GET",
-    path = "/api/v1/user/walletSummary?currency=XBt",
-    expires = Math.round(new Date().getTime() / 1000) + 60;
-
-  var signature = crypto
-    .createHmac("sha256", apiSecret)
-    .update(verb + path + expires)
-    .digest("hex");
-
-  var headers = {
-    "content-type": "application/json",
-    Accept: "application/json",
-    "X-Requested-With": "XMLHttpRequest",
-    "api-expires": expires,
-    "api-key": apiKey,
-    "api-signature": signature
-  };
-
-  const requestConfig = {
-    headers: headers,
-    baseURL: "https://www.bitmex.com",
-    url: path,
-    method: "GET"
-  };
-
-  try {
-    let res = await axios.request(requestConfig);
-    if (res.status === 200) {
-      return true;
-    } else {
-      return false;
-    }
-  } catch (error) {
-    console.log(error.response);
-    return false;
-  }
-}
+const encrypt_decrypt = require("../../../core/encrypt_decrypt.js");
+const league_helper = require("../../../core/league_helper.js");
 
 module.exports = {
   comingLeagues: async ctx => {
-    if (!fs.existsSync(callForLeagueDataFile)) {
+    if (!fs.existsSync(league_helper.callForLeagueDataFile)) {
       fs.writeFileSync(
-        callForLeagueDataFile,
+        league_helper.callForLeagueDataFile,
         JSON.stringify({
           coming_leagues: []
         })
       );
     }
 
-    let rawdata = fs.readFileSync(callForLeagueDataFile);
+    let rawdata = fs.readFileSync(league_helper.callForLeagueDataFile);
     let json = JSON.parse(rawdata);
     let jsonArray = getValues(json.coming_leagues);
     let result = [];
@@ -70,16 +29,16 @@ module.exports = {
   },
 
   joinLeague: async ctx => {
-    if (!fs.existsSync(callForLeagueDataFile)) {
+    if (!fs.existsSync(league_helper.callForLeagueDataFile)) {
       fs.writeFileSync(
-        callForLeagueDataFile,
+        league_helper.callForLeagueDataFile,
         JSON.stringify({
           coming_leagues: []
         })
       );
     }
 
-    let rawdata = fs.readFileSync(callForLeagueDataFile);
+    let rawdata = fs.readFileSync(league_helper.callForLeagueDataFile);
     let callForLeagueData = JSON.parse(rawdata);
 
     let jsonBody = ctx.request.body;
@@ -112,7 +71,7 @@ module.exports = {
       });
 
       fs.writeFileSync(
-        callForLeagueDataFile,
+        league_helper.callForLeagueDataFile,
         JSON.stringify(callForLeagueData)
       );
     }
@@ -124,7 +83,7 @@ module.exports = {
   },
 
   index: async ctx => {
-    let rawdata = fs.readFileSync(leagueInputDataFile);
+    let rawdata = fs.readFileSync(league_helper.leagueInputDataFile);
     let leagueData = JSON.parse(rawdata);
     let files = getReadingFiles(leagueData.leagueUniqueIdentifier);
 
@@ -136,10 +95,11 @@ module.exports = {
     } else {
       let lastFileName = files[files.length - 1];
       let rawFiledata = fs.readFileSync(
-        "./league_data/" +
-          leagueData.leagueUniqueIdentifier +
-          "/" +
-          lastFileName
+        league_helper.createLeagueFilePath(
+          leagueData.leagueUniqueIdentifier,
+          lastFileName,
+          false
+        )
       );
       let lastReadingData = JSON.parse(rawFiledata);
 
@@ -151,13 +111,41 @@ module.exports = {
   }
 };
 
+async function validateApiKeyAndSecret(apiKey, apiSecret) {
+  var verb = "GET",
+    path = league_helper.wallerSummaryApiPath,
+    expires = Math.round(new Date().getTime() / 1000) + 60;
+
+  const signature = encrypt_decrypt.getBitmexSignature(
+    apiSecret,
+    verb,
+    path,
+    expires
+  );
+
+  const headers = league_helper.generateApiHeaders(expires, apiKey, signature);
+  const config = league_helper.generateRequestConfig(headers, path, verb);
+
+  try {
+    let res = await axios.request(config);
+    if (res.status === 200) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.log(error.response);
+    return false;
+  }
+}
+
 function tryGetNearestComingLeague() {
-  let rawdata = fs.readFileSync(callForLeagueDataFile);
+  let rawdata = fs.readFileSync(league_helper.callForLeagueDataFile);
   let callForLeagueData = JSON.parse(rawdata);
   let comingLeagues = callForLeagueData.coming_leagues;
 
-  for (var k in comingLeagues) {
-    if (comingLeagues.hasOwnProperty(k)) {
+  for (var key in comingLeagues) {
+    if (comingLeagues.hasOwnProperty(key)) {
       let {
         id,
         name,
@@ -165,7 +153,7 @@ function tryGetNearestComingLeague() {
         endDate,
         signingLimitDate,
         participants
-      } = comingLeagues[k];
+      } = comingLeagues[key];
       let participantsResult = [];
 
       participants.forEach(participant => {
@@ -191,8 +179,7 @@ function tryGetNearestComingLeague() {
 }
 
 function hashSecret(apiSecret) {
-  let encrypted = encrypt_decrypt.encrypt(apiSecret);
-  return encrypted;
+  return encrypt_decrypt.encrypt(apiSecret);
 }
 
 function isNullOrEmpty(data) {
@@ -211,8 +198,9 @@ async function validateJoinLeagueData(data, participants, signingLimitDate) {
       error: "Nieprawidłowe dane."
     };
   }
+
   let now = new Date();
-  if (new Date(signingLimitDate) < now) {
+  if (new Date(signingLimitDate) < new Date()) {
     return {
       isValid: false,
       error: "Zapisy na wybraną ligę są zakończone."
@@ -240,7 +228,7 @@ async function validateJoinLeagueData(data, participants, signingLimitDate) {
   ) {
     return {
       isValid: false,
-      error: "Niektóre dane powielają się z juz zapisanym uczestnikiem."
+      error: "Niektóre dane powielają się z już zapisanym uczestnikiem."
     };
   }
 
@@ -309,13 +297,7 @@ function getReadingFiles(leagueUniqueIdentifier) {
   ) {
     return [];
   }
-  var dir = "./league_data/" + leagueUniqueIdentifier;
+  const dir = league_helper.createLeagueFolderPath(leagueUniqueIdentifier);
   var files = fs.readdirSync(dir);
   return files;
-}
-
-function filterElementByKey(response, key) {
-  return response.find(element => {
-    return element.transactType === key;
-  });
 }

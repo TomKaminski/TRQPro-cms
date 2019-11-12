@@ -10,6 +10,7 @@ const crypto = require("crypto");
 const moment = require("moment");
 const _ = require("lodash");
 const encrypt_decrypt = require("./core/encrypt_decrypt.js");
+const league_helper = require("./core/league_helper.js");
 
 moment.fn.toJSON = function() {
   return this.format();
@@ -19,19 +20,17 @@ moment.fn.toJSON = function() {
 const strapi = require("strapi");
 strapi().start();
 
-const leagueInputDataFile = "./league_data/input.json";
-
 let md5Previous = null;
 let fsWait = false;
 let job = setupJob();
 
-fs.watch(leagueInputDataFile, (event, filename) => {
+fs.watch(league_helper.leagueInputDataFile, (event, filename) => {
   if (filename) {
     if (fsWait) return;
     fsWait = setTimeout(() => {
       fsWait = false;
     }, 100);
-    const md5Current = md5(fs.readFileSync(leagueInputDataFile));
+    const md5Current = md5(fs.readFileSync(league_helper.leagueInputDataFile));
     if (md5Current === md5Previous) {
       return;
     }
@@ -46,11 +45,11 @@ fs.watch(leagueInputDataFile, (event, filename) => {
 });
 
 function setupJob() {
-  if (!fs.existsSync(leagueInputDataFile)) {
-    fs.writeFileSync(leagueInputDataFile, JSON.stringify({}));
+  if (!fs.existsSync(league_helper.leagueInputDataFile)) {
+    fs.writeFileSync(league_helper.leagueInputDataFile, JSON.stringify({}));
   }
 
-  let rawdata = fs.readFileSync(leagueInputDataFile);
+  let rawdata = fs.readFileSync(league_helper.leagueInputDataFile);
   let leagueData = JSON.parse(rawdata);
 
   if (leagueData.leagueUniqueIdentifier) {
@@ -65,10 +64,11 @@ function setupJob() {
     } else {
       let lastFileName = files[files.length - 1];
       let rawFiledata = fs.readFileSync(
-        "./league_data/" +
-          leagueData.leagueUniqueIdentifier +
-          "/" +
-          lastFileName
+        league_helper.createLeagueFilePath(
+          leagueData.leagueUniqueIdentifier,
+          lastFileName,
+          false
+        )
       );
       let lastReadingData = JSON.parse(rawFiledata);
 
@@ -84,13 +84,15 @@ function setupJob() {
 }
 
 function getReadingFiles(leagueUniqueIdentifier) {
-  var dir = "./league_data/" + leagueUniqueIdentifier;
+  const dir = league_helper.createLeagueFolderPath(leagueUniqueIdentifier);
   var files = fs.readdirSync(dir);
   return files;
 }
 
 function createLeagueFolderIfNotExists(leagueData) {
-  var dir = "./league_data/" + leagueData.leagueUniqueIdentifier;
+  const dir = league_helper.createLeagueFolderPath(
+    leagueData.leagueUniqueIdentifier
+  );
 
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);
@@ -100,7 +102,7 @@ function createLeagueFolderIfNotExists(leagueData) {
 function saveReadingFile(leagueUniqueIdentifier, readingData) {
   var fileName = createReadingFileName(new Date(readingData.readingDate));
   fs.writeFileSync(
-    "./league_data/" + leagueUniqueIdentifier + "/" + fileName + ".json",
+    league_helper.createLeagueFilePath(leagueUniqueIdentifier, fileName, true),
     JSON.stringify(readingData)
   );
 }
@@ -240,11 +242,13 @@ function getDayRoe(readingData, files, dayRoe, isEndRoe) {
   if (files && files.length > dayRoe - 1) {
     let index = isEndRoe ? 0 : files.length - dayRoe;
     let historicalFileName = files[index];
+
     let rawFiledata = fs.readFileSync(
-      "./league_data/" +
-        readingData.leagueUniqueIdentifier +
-        "/" +
-        historicalFileName
+      league_helper.createLeagueFilePath(
+        readingData.leagueUniqueIdentifier,
+        historicalFileName,
+        false
+      )
     );
 
     let historicalData = JSON.parse(rawFiledata);
@@ -297,29 +301,27 @@ function getRoe(prev, current) {
 
 async function getParticipantCurrentWalletInfo(participant) {
   var verb = "GET",
-    path = "/api/v1/user/walletSummary?currency=XBt",
+    path = league_helper.wallerSummaryApiPath,
     expires = Math.round(new Date().getTime() / 1000) + 60;
 
-  var signature = crypto
-    .createHmac("sha256", encrypt_decrypt.decrypt(participant.apiSecret))
-    .update(verb + path + expires)
-    .digest("hex");
+  const signature = encrypt_decrypt.getBitmexSignature(
+    encrypt_decrypt.decrypt(participant.apiSecret),
+    verb,
+    path,
+    expires
+  );
 
-  var headers = {
-    "content-type": "application/json",
-    Accept: "application/json",
-    "X-Requested-With": "XMLHttpRequest",
-    "api-expires": expires,
-    "api-key": participant.apiKey,
-    "api-signature": signature
-  };
+  const headers = league_helper.generateApiHeaders(
+    expires,
+    participant.apiKey,
+    signature
+  );
 
-  const requestConfig = {
-    headers: headers,
-    baseURL: "https://www.bitmex.com",
-    url: path,
-    method: "GET"
-  };
+  const requestConfig = league_helper.generateRequestConfig(
+    headers,
+    path,
+    verb
+  );
 
   return {
     inner: await axios.request(requestConfig),
