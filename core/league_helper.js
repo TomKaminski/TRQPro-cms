@@ -1,4 +1,5 @@
 const wallerSummaryApiPath = "/api/v1/user/walletSummary?currency=XBt";
+const walletApiPath = "/api/v1/user/wallet?currency=XBt";
 
 const leagueInputDataFile = "./league_data/input.json";
 const callForLeagueDataFile = "./league_data/call_for_league.json";
@@ -42,5 +43,6 @@ module.exports = {
   generateRequestConfig,
   wallerSummaryApiPath,
   leagueInputDataFile,
-  callForLeagueDataFile
+  callForLeagueDataFile,
+  walletApiPath
 };

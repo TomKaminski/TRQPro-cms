@@ -56,6 +56,7 @@ function setupJob() {
     let files = getReadingFiles(leagueData.leagueUniqueIdentifier);
 
     if (files.length === 0) {
+      console.log("Scheduling first reading for", leagueData.startDate);
       let job = schedule.scheduleJob(leagueData.startDate, function() {
         createReadingFile(leagueData);
       });
@@ -71,6 +72,10 @@ function setupJob() {
       );
       let lastReadingData = JSON.parse(rawFiledata);
 
+      console.log(
+        "Scheduling next reading for",
+        lastReadingData.nextReadingDate
+      );
       let job = schedule.scheduleJob(
         lastReadingData.nextReadingDate,
         function() {
@@ -94,6 +99,7 @@ function createLeagueFolderIfNotExists(leagueData) {
   );
 
   if (!fs.existsSync(dir)) {
+    console.log("Creating league folder:", dir);
     fs.mkdirSync(dir);
   }
 }
@@ -107,6 +113,7 @@ function saveReadingFile(leagueUniqueIdentifier, readingData) {
 }
 
 function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
+  console.log("Creating reading file");
   var actions = leagueData.participants.map(getParticipantCurrentWalletInfo);
 
   var nextReadingDate = moment(
@@ -129,7 +136,8 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
     startDate: leagueData.startDate,
     endDate: leagueData.endDate,
     nextReadingDate: nextReadingDate,
-    participants: {}
+    participants: {},
+    totallyEmptyAccounts: []
   };
 
   Promise.all(actions).then(responses => {
@@ -139,6 +147,20 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
         let transferEntry = filterElementByKey(response.inner.data, "Transfer");
         let totalEntry = filterElementByKey(response.inner.data, "Total");
 
+        if (!totalEntry) {
+          console.log("---------");
+          console.log("Total entry not found!");
+          console.log(response.participant.username);
+          console.log("---------");
+
+          let { email, username } = response.participant;
+          readingData.totallyEmptyAccounts.push({
+            email,
+            username
+          });
+          return;
+        }
+
         var roeCurrent = 0;
         var startingBalance = totalEntry.amount;
         var isRekt = false;
@@ -147,6 +169,24 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
         var tooLowBalance = false;
 
         if (previousReadingFileData) {
+          if (
+            !previousReadingFileData.participants[totalEntry.account.toString()]
+          ) {
+            console.log("---------");
+            console.log(
+              "Total entry found but previous file doesnt containt participant. Hacking!"
+            );
+            console.log(response.participant.username);
+            console.log("---------");
+
+            let { email, username } = response.participant;
+            readingData.totallyEmptyAccounts.push({
+              email,
+              username
+            });
+            return;
+          }
+
           tooLowBalance =
             previousReadingFileData.participants[totalEntry.account.toString()]
               .tooLowBalance === true || false;
@@ -255,21 +295,21 @@ function getDayRoe(readingData, files, dayRoe, isEndRoe) {
       return !item.isRekt && !item.isRetarded && !item.tooLowBalance;
     });
 
-    console.log("participants to compute:", participantsToCompute.length);
-
     for (var key in participantsToCompute) {
+      let { account } = participantsToCompute[key];
       if (
-        readingData.participants.hasOwnProperty(key) &&
-        historicalData.participants.hasOwnProperty(key)
+        readingData.participants.hasOwnProperty(account) &&
+        historicalData.participants.hasOwnProperty(account)
       ) {
         let roePropName = isEndRoe ? "roeEnd" : "roe" + dayRoe + "d";
-        readingData.participants[key][roePropName] = getRoe(
-          historicalData.participants[key].balance,
-          readingData.participants[key].balance
+        readingData.participants[account][roePropName] = getRoe(
+          historicalData.participants[account].balance,
+          readingData.participants[account].balance
         );
       }
     }
   }
+
   return readingData;
 }
 
