@@ -249,6 +249,13 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
           tooLowBalance,
           roes: nextRoes
         };
+      } else {
+        let { email, username } = response.participant;
+        readingData.totallyEmptyAccounts.push({
+          email,
+          username
+        });
+        return;
       }
     });
 
@@ -362,10 +369,19 @@ async function getParticipantCurrentWalletInfo(participant) {
     verb
   );
 
-  return {
-    inner: await axios.request(requestConfig),
-    participant
-  };
+  try {
+    return {
+      inner: await axios.request(requestConfig),
+      participant
+    };
+  } catch {
+    return {
+      inner: {
+        status: 401
+      },
+      participant
+    };
+  }
 }
 
 function createReadingFileName(date) {
