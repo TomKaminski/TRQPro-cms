@@ -187,13 +187,23 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
             return;
           }
 
+          roeCurrent = getRoe(
+            previousReadingFileData.participants[totalEntry.account.toString()]
+              .startingBalance,
+            totalEntry.amount
+          );
+
+          startingBalance =
+            previousReadingFileData.participants[totalEntry.account.toString()]
+              .startingBalance;
+
           tooLowBalance =
             previousReadingFileData.participants[totalEntry.account.toString()]
               .tooLowBalance === true || false;
 
           isRekt =
             previousReadingFileData.participants[totalEntry.account.toString()]
-              .isRekt === true || roeCurrent < -99;
+              .isRekt === true || roeCurrent <= -99.0;
 
           isRetarded =
             previousReadingFileData.participants[totalEntry.account.toString()]
@@ -205,16 +215,6 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
               depositEntry,
               transferEntry
             );
-
-          roeCurrent = getRoe(
-            previousReadingFileData.participants[totalEntry.account.toString()]
-              .startingBalance,
-            totalEntry.amount
-          );
-
-          startingBalance =
-            previousReadingFileData.participants[totalEntry.account.toString()]
-              .startingBalance;
 
           nextRoes = previousReadingFileData.participants[
             totalEntry.account.toString()
