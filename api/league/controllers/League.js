@@ -251,11 +251,11 @@ function getValues(obj) {
 
 function compareRoes(a, b) {
   if (a.isRetarded && b.isRetarded) {
-    return b.roeCurrent - a.roeCurrent;
+    return b.roes.length - a.roes.length < 0 ? -1 : 1;
   }
 
   if (a.isRekt && b.isRekt) {
-    return b.roeCurrent - a.roeCurrent;
+    return b.roes.length - a.roes.length < 0 ? -1 : 1;
   }
 
   if (a.tooLowBalance && b.tooLowBalance) {
