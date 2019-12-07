@@ -182,7 +182,7 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
         }
 
         var roeCurrent = 0;
-        var startingBalance = totalEntry.amount;
+        var startingBalance = totalEntry.marginBalance;
         var isRekt = false;
         var isRetarded = false;
         var nextRoes = [0];
@@ -210,7 +210,7 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
           roeCurrent = getRoe(
             previousReadingFileData.participants[totalEntry.account.toString()]
               .startingBalance,
-            totalEntry.amount
+            totalEntry.marginBalance
           );
 
           startingBalance =
@@ -251,7 +251,7 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
         }
 
         readingData.participants[totalEntry.account.toString()] = {
-          balance: totalEntry.amount,
+          balance: totalEntry.marginBalance,
           account: totalEntry.account,
           deposit: depositEntry,
           transfer: transferEntry,
