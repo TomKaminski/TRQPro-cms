@@ -16,6 +16,10 @@ function createLeagueFolderPath(identifier) {
   return "./league_data/" + identifier;
 }
 
+function createLeagueHistoryFolderPath() {
+  return "./league_history";
+}
+
 function generateApiHeaders(expires, apiKey, signature) {
   return {
     "content-type": "application/json",
@@ -44,5 +48,6 @@ module.exports = {
   wallerSummaryApiPath,
   leagueInputDataFile,
   callForLeagueDataFile,
-  walletApiPath
+  walletApiPath,
+  createLeagueHistoryFolderPath
 };
