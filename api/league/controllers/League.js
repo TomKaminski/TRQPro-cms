@@ -6,6 +6,20 @@ const encrypt_decrypt = require("../../../core/encrypt_decrypt.js");
 const league_helper = require("../../../core/league_helper.js");
 
 module.exports = {
+  checkRefferalsForNearestComingLeague: async ctx => {
+    let rawdata = fs.readFileSync(league_helper.callForLeagueDataFile);
+    let callForLeagueData = JSON.parse(rawdata);
+    let comingLeagues = callForLeagueData.coming_leagues;
+
+    let key = Object.keys(comingLeagues)[0];
+    var actions = comingLeagues[key].participants.map(validateRefferal);
+
+    console.log(actions.length);
+    await Promise.all(actions).then(responses => {
+      ctx.send(responses);
+    });
+  },
+
   comingLeagues: async ctx => {
     if (!fs.existsSync(league_helper.callForLeagueDataFile)) {
       fs.writeFileSync(
@@ -134,8 +148,48 @@ async function validateApiKeyAndSecret(apiKey, apiSecret) {
       return false;
     }
   } catch (error) {
-    console.log(error.response);
     return false;
+  }
+}
+
+async function validateRefferal(participant) {
+  var verb = "GET",
+    path = league_helper.affliateStatusApiPath,
+    expires = Math.round(new Date().getTime() / 1000) + 60;
+
+  const signature = encrypt_decrypt.getBitmexSignature(
+    encrypt_decrypt.decrypt(participant.apiSecret),
+    verb,
+    path,
+    expires
+  );
+
+  const headers = league_helper.generateApiHeaders(
+    expires,
+    participant.apiKey,
+    signature
+  );
+  const config = league_helper.generateRequestConfig(headers, path, verb);
+
+  try {
+    let res = await axios.request(config);
+    if (res.status === 200) {
+      return {
+        email: participant.email,
+        nick: participant.username,
+        refId: res.data.referrerAccount
+      };
+    } else {
+      return {
+        email: participant.email,
+        refId: -1
+      };
+    }
+  } catch (error) {
+    return {
+      email: participant.email,
+      refId: -1
+    };
   }
 }
 

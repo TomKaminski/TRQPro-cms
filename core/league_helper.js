@@ -1,5 +1,6 @@
 const wallerSummaryApiPath = "/api/v1/user/walletSummary?currency=XBt";
 const walletApiPath = "/api/v1/user/wallet?currency=XBt";
+const affliateStatusApiPath = "/api/v1/user/affiliateStatus";
 
 const leagueInputDataFile = "./league_data/input.json";
 const callForLeagueDataFile = "./league_data/call_for_league.json";
@@ -41,6 +42,7 @@ function generateRequestConfig(headers, path, verb) {
 }
 
 module.exports = {
+  affliateStatusApiPath,
   createLeagueFilePath,
   createLeagueFolderPath,
   generateApiHeaders,
