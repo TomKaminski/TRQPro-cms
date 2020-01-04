@@ -26,7 +26,15 @@ module.exports = {
     let lastReadingData = JSON.parse(rawFiledata);
 
     let participantsArray = getValues(lastReadingData.participants);
-    lastReadingData.participants = participantsArray;
+
+    var participantsResult = [];
+    participantsArray.forEach(participant => {
+      delete participant.email;
+
+      participantsResult.push(participant);
+    });
+
+    lastReadingData.participants = participantsResult;
 
     ctx.send(lastReadingData);
   }

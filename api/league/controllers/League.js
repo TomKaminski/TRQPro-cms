@@ -161,7 +161,15 @@ module.exports = {
       let lastReadingData = JSON.parse(rawFiledata);
 
       let participantsArray = getValues(lastReadingData.participants);
-      lastReadingData.participants = participantsArray;
+
+      var participantsResult = [];
+      participantsArray.forEach(participant => {
+        delete participant.email;
+
+        participantsResult.push(participant);
+      });
+
+      lastReadingData.participants = participantsResult;
 
       ctx.send(lastReadingData);
     }
@@ -218,19 +226,18 @@ async function validateRefferal(participant) {
     let res = await axios.request(config);
     if (res.status === 200) {
       return {
-        email: participant.email,
         nick: participant.username,
         refId: res.data.referrerAccount
       };
     } else {
       return {
-        email: participant.email,
+        nick: participant.username,
         refId: -1
       };
     }
   } catch (error) {
     return {
-      email: participant.email,
+      nick: participant.username,
       refId: -1
     };
   }
