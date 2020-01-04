@@ -6,6 +6,49 @@ const encrypt_decrypt = require("../../../core/encrypt_decrypt.js");
 const league_helper = require("../../../core/league_helper.js");
 
 module.exports = {
+  indexSmallData: async ctx => {
+    let rawdata = fs.readFileSync(league_helper.leagueInputDataFile);
+    let leagueData = JSON.parse(rawdata);
+    let files = getReadingFiles(leagueData.leagueUniqueIdentifier);
+
+    let endDate = moment(new Date(leagueData.endDate));
+    let now = moment(new Date());
+
+    if (files.length === 0 || endDate.diff(now, "days") <= -3) {
+      ctx.send({
+        isLeagueData: false,
+        participantsCount: tryGetComingLeagueParticipantsCount()
+      });
+    } else {
+      let lastFileName = files[files.length - 1];
+      let rawFiledata = fs.readFileSync(
+        league_helper.createLeagueFilePath(
+          leagueData.leagueUniqueIdentifier,
+          lastFileName,
+          false
+        )
+      );
+      let lastReadingData = JSON.parse(rawFiledata);
+
+      let participantsArray = getValues(lastReadingData.participants);
+      let smallArray = participantsArray.slice(0, 5).map(participant => {
+        return {
+          name: participant.username,
+          roe: participant.roeCurrent,
+          tooLowBalance: participant.tooLowBalance,
+          isRekt: participant.isRekt,
+          isRetarded: participant.isRetarded
+        };
+      });
+
+      ctx.send({
+        isLeagueData: true,
+        participants: smallArray,
+        hasEnded: lastReadingData.hasEnded
+      });
+    }
+  },
+
   checkRefferalsForNearestComingLeague: async ctx => {
     let rawdata = fs.readFileSync(league_helper.callForLeagueDataFile);
     let callForLeagueData = JSON.parse(rawdata);
@@ -191,6 +234,19 @@ async function validateRefferal(participant) {
       refId: -1
     };
   }
+}
+
+function tryGetComingLeagueParticipantsCount() {
+  let rawdata = fs.readFileSync(league_helper.callForLeagueDataFile);
+  let callForLeagueData = JSON.parse(rawdata);
+  let comingLeagues = callForLeagueData.coming_leagues;
+
+  for (var key in comingLeagues) {
+    if (comingLeagues.hasOwnProperty(key)) {
+      return comingLeagues[key].participants.length;
+    }
+  }
+  return 0;
 }
 
 function tryGetNearestComingLeague() {

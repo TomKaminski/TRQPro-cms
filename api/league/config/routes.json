@@ -19,6 +19,11 @@
       "method": "POST",
       "path": "/league/joinLeague",
       "handler": "League.joinLeague"
+    },
+    {
+      "method": "GET",
+      "path": "/league/smallLastReading",
+      "handler": "League.indexSmallData"
     }
   ]
 }
