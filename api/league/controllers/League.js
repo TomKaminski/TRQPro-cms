@@ -113,30 +113,80 @@ module.exports = {
       return;
     }
 
-    let validatedData = await validateJoinLeagueData(
-      jsonBody,
-      callForLeagueData.coming_leagues[jsonBody.league].participants,
-      callForLeagueData.coming_leagues[jsonBody.league].signingLimitDate
-    );
+    if (jsonBody.saveForAllLeaguesAtCurrentQuarter === true) {
+      let mainLeagueData = callForLeagueData.coming_leagues[jsonBody.league];
+      let quarterCode = mainLeagueData.quarter;
 
-    if (validatedData.isValid) {
-      callForLeagueData.coming_leagues[jsonBody.league].participants.push({
-        username: jsonBody.nickname,
-        email: jsonBody.email,
-        apiKey: jsonBody.apiKey,
-        apiSecret: validatedData.hashedApiSecret
+      var validityResult;
+      for (var key in callForLeagueData.coming_leagues) {
+        if (callForLeagueData.coming_leagues.hasOwnProperty(key)) {
+          let leagueData = callForLeagueData.coming_leagues[key];
+          if (leagueData.quarter === quarterCode) {
+            let validatedData = await validateJoinLeagueData(
+              jsonBody,
+              leagueData.participants,
+              leagueData.signingLimitDate
+            );
+
+            validityResult = validatedData;
+            if (!validatedData.isValid) {
+              break;
+            }
+          }
+        }
+      }
+
+      if (validityResult.isValid) {
+        for (var key in callForLeagueData.coming_leagues) {
+          if (callForLeagueData.coming_leagues.hasOwnProperty(key)) {
+            let leagueData = callForLeagueData.coming_leagues[key];
+            if (leagueData.quarter === quarterCode) {
+              callForLeagueData.coming_leagues[key].participants.push({
+                username: jsonBody.nickname,
+                email: jsonBody.email,
+                apiKey: jsonBody.apiKey,
+                apiSecret: validityResult.hashedApiSecret
+              });
+            }
+          }
+        }
+
+        fs.writeFileSync(
+          league_helper.callForLeagueDataFile,
+          JSON.stringify(callForLeagueData)
+        );
+      }
+      ctx.send({
+        isValid: validityResult.isValid,
+        error: validityResult.error
       });
-
-      fs.writeFileSync(
-        league_helper.callForLeagueDataFile,
-        JSON.stringify(callForLeagueData)
+      return;
+    } else {
+      let validatedData = await validateJoinLeagueData(
+        jsonBody,
+        callForLeagueData.coming_leagues[jsonBody.league].participants,
+        callForLeagueData.coming_leagues[jsonBody.league].signingLimitDate
       );
-    }
 
-    ctx.send({
-      isValid: validatedData.isValid,
-      error: validatedData.error
-    });
+      if (validatedData.isValid) {
+        callForLeagueData.coming_leagues[jsonBody.league].participants.push({
+          username: jsonBody.nickname,
+          email: jsonBody.email,
+          apiKey: jsonBody.apiKey,
+          apiSecret: validatedData.hashedApiSecret
+        });
+
+        fs.writeFileSync(
+          league_helper.callForLeagueDataFile,
+          JSON.stringify(callForLeagueData)
+        );
+      }
+
+      ctx.send({
+        isValid: validatedData.isValid,
+        error: validatedData.error
+      });
+    }
   },
 
   index: async ctx => {
@@ -316,7 +366,6 @@ async function validateJoinLeagueData(data, participants, signingLimitDate) {
     };
   }
 
-  let now = new Date();
   if (new Date(signingLimitDate) < new Date()) {
     return {
       isValid: false,
