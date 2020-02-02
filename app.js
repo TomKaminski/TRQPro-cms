@@ -23,6 +23,15 @@ let md5Previous = null;
 let fsWait = false;
 let job = setupJob();
 
+Object.findOne = function(obj, predicate) {
+  for (var key in obj) {
+    if (obj.hasOwnProperty(key) && predicate(obj[key])) {
+      return obj[key];
+    }
+  }
+  return null;
+};
+
 fs.watch(league_helper.leagueInputDataFile, (event, filename) => {
   if (filename) {
     if (fsWait) return;
@@ -114,7 +123,18 @@ function saveReadingFile(leagueUniqueIdentifier, readingData) {
 
 function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
   console.log("Creating reading file");
-  var actions = leagueData.participants.map(getParticipantCurrentWalletInfo);
+  var actions = [];
+  if (previousReadingFileData) {
+    actions = leagueData.participants.map(value => {
+      let prevData = Object.findOne(
+        previousReadingFileData.participants,
+        participantData => participantData.email === value.email
+      );
+      return getParticipantCurrentWalletInfo(value, prevData);
+    });
+  } else {
+    actions = leagueData.participants.map(getParticipantCurrentWalletInfo);
+  }
 
   var nextReadingDate = moment(
     new Date(
@@ -162,7 +182,7 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
         }
 
         var roeCurrent = 0;
-        var startingBalance = totalEntry.amount;
+        var startingBalance = totalEntry.marginBalance;
         var isRekt = false;
         var isRetarded = false;
         var nextRoes = [0];
@@ -174,7 +194,7 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
           ) {
             console.log("---------");
             console.log(
-              "Total entry found but previous file doesnt containt participant. Hacking!"
+              "Total entry found but previous file doesnt contain participant. Hacking!"
             );
             console.log(response.participant.username);
             console.log("---------");
@@ -187,13 +207,23 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
             return;
           }
 
+          roeCurrent = getRoe(
+            previousReadingFileData.participants[totalEntry.account.toString()]
+              .startingBalance,
+            totalEntry.marginBalance
+          );
+
+          startingBalance =
+            previousReadingFileData.participants[totalEntry.account.toString()]
+              .startingBalance;
+
           tooLowBalance =
             previousReadingFileData.participants[totalEntry.account.toString()]
               .tooLowBalance === true || false;
 
           isRekt =
             previousReadingFileData.participants[totalEntry.account.toString()]
-              .isRekt === true || roeCurrent < -99;
+              .isRekt === true || roeCurrent <= -99.0;
 
           isRetarded =
             previousReadingFileData.participants[totalEntry.account.toString()]
@@ -205,16 +235,6 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
               depositEntry,
               transferEntry
             );
-
-          roeCurrent = getRoe(
-            previousReadingFileData.participants[totalEntry.account.toString()]
-              .startingBalance,
-            totalEntry.amount
-          );
-
-          startingBalance =
-            previousReadingFileData.participants[totalEntry.account.toString()]
-              .startingBalance;
 
           nextRoes = previousReadingFileData.participants[
             totalEntry.account.toString()
@@ -231,7 +251,7 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
         }
 
         readingData.participants[totalEntry.account.toString()] = {
-          balance: totalEntry.amount,
+          balance: totalEntry.marginBalance,
           account: totalEntry.account,
           deposit: depositEntry,
           transfer: transferEntry,
@@ -249,6 +269,10 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
           tooLowBalance,
           roes: nextRoes
         };
+      } else if (response.inner.status === 201) {
+        readingData.participants[
+          response.inner.previousData.account.toString()
+        ] = response.inner.previousData;
       } else {
         let { email, username } = response.participant;
         readingData.totallyEmptyAccounts.push({
@@ -352,7 +376,23 @@ function getRoe(prev, current) {
   return roe;
 }
 
-async function getParticipantCurrentWalletInfo(participant) {
+async function getParticipantCurrentWalletInfo(participant, previousData) {
+  if (
+    previousData &&
+    (previousData.isRetarded ||
+      previousData.isRekt ||
+      previousData.tooLowBalance)
+  ) {
+    console.log("skip participant:" + participant.email);
+    return {
+      inner: {
+        status: 201,
+        previousData
+      },
+      participant
+    };
+  }
+
   var verb = "GET",
     path = league_helper.wallerSummaryApiPath,
     expires = Math.round(new Date().getTime() / 1000) + 60;

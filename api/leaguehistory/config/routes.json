@@ -1,0 +1,14 @@
+{
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/leaguehistory/selectorData",
+      "handler": "LeagueHistory.selectorData"
+    },
+    {
+      "method": "GET",
+      "path": "/leaguehistory/leagueData",
+      "handler": "LeagueHistory.leagueData"
+    }
+  ]
+}
