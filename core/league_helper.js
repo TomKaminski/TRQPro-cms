@@ -24,9 +24,9 @@ function createLeagueFolderPath(identifier) {
 
 function createLeagueLadderFilePath(year, quarter) {
   if (quarter) {
-    return "./league_ladder/_" + year + "_0" + quarter + ".json";
+    return "./league_ladder/ladder_" + year + "_0" + quarter + ".json";
   } else {
-    return "./league_ladder/_" + year + ".json";
+    return "./league_ladder/ladder_" + year + ".json";
   }
 }
 
@@ -64,7 +64,7 @@ module.exports = {
   leagueInputDataFile,
   callForLeagueDataFile,
   getCurrentQuarter,
-  createLeagueLadderFilePath
+  createLeagueLadderFilePath,
   walletApiPath,
   createLeagueHistoryFolderPath
 };
