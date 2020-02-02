@@ -12,8 +12,21 @@ function createLeagueFilePath(identifier, fileName, appendJsonExtension) {
   return filePath;
 }
 
+function getCurrentQuarter() {
+  var today = new Date();
+  return Math.floor((today.getMonth() + 3) / 3);
+}
+
 function createLeagueFolderPath(identifier) {
   return "./league_data/" + identifier;
+}
+
+function createLeagueLadderFilePath(year, quarter) {
+  if (quarter) {
+    return "./league_ladder/_" + year + "_0" + quarter + ".json";
+  } else {
+    return "./league_ladder/_" + year + ".json";
+  }
 }
 
 function generateApiHeaders(expires, apiKey, signature) {
@@ -44,5 +57,7 @@ module.exports = {
   wallerSummaryApiPath,
   leagueInputDataFile,
   callForLeagueDataFile,
-  walletApiPath
+  walletApiPath,
+  getCurrentQuarter,
+  createLeagueLadderFilePath
 };

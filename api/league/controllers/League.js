@@ -4,6 +4,7 @@ const moment = require("moment");
 
 const encrypt_decrypt = require("../../../core/encrypt_decrypt.js");
 const league_helper = require("../../../core/league_helper.js");
+const league_ladder = require("../../../core/league_ladder.js");
 
 module.exports = {
   comingLeagues: async ctx => {
@@ -80,6 +81,12 @@ module.exports = {
       isValid: validatedData.isValid,
       error: validatedData.error
     });
+  },
+
+  ladderFun: async ctx => {
+    league_ladder.distributePointsForYearLadder({});
+    league_ladder.distributePointsForQuarterLadder(1, {});
+    ctx.send("Test");
   },
 
   index: async ctx => {

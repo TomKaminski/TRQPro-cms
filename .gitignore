@@ -114,3 +114,5 @@ dev.env
 prod.env
 league_data/*
 league_data/input.json
+league_history/*
+league_ladder/*
