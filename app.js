@@ -292,12 +292,7 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
       readingData = getEndRoe(readingData, filesInfo);
       readingData.hasEnded = true;
 
-      //TODO
-      distributePointsForYearLadder(readingData);
-      distributePointsForQuarterLadder(
-        league_helper.getCurrentQuarter(),
-        readingData
-      );
+      distributePointsForLadders(readingData);
     }
 
     saveReadingFile(leagueData.leagueUniqueIdentifier, readingData);

@@ -54,6 +54,56 @@ function generateRequestConfig(headers, path, verb) {
   };
 }
 
+function getSortedParticipants(obj) {
+  var values = [];
+  for (var key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      values.push(obj[key]);
+    }
+  }
+  return values.sort(compareRoes);
+}
+
+function compareRoes(a, b) {
+  if (a.isRetarded && b.isRetarded) {
+    return b.roes.length - a.roes.length < 0 ? -1 : 1;
+  }
+
+  if (a.isRekt && b.isRekt) {
+    return b.roes.length - a.roes.length < 0 ? -1 : 1;
+  }
+
+  if (a.tooLowBalance && b.tooLowBalance) {
+    return b.roeCurrent - a.roeCurrent;
+  }
+
+  if (a.isRetarded) {
+    return 1;
+  }
+
+  if (b.isRetarded) {
+    return -1;
+  }
+
+  if (a.tooLowBalance) {
+    return 1;
+  }
+
+  if (b.tooLowBalance) {
+    return -1;
+  }
+
+  if (a.isRekt) {
+    return 1;
+  }
+
+  if (b.isRekt) {
+    return -1;
+  }
+
+  return b.roeCurrent - a.roeCurrent;
+}
+
 module.exports = {
   affliateStatusApiPath,
   createLeagueFilePath,
@@ -66,5 +116,7 @@ module.exports = {
   getCurrentQuarter,
   createLeagueLadderFilePath,
   walletApiPath,
-  createLeagueHistoryFolderPath
+  createLeagueHistoryFolderPath,
+  getSortedParticipants,
+  compareRoes
 };
