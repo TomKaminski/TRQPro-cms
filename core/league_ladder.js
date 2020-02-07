@@ -58,7 +58,6 @@ function distributePointsForYearLadder(best10Participants, dsqLiqParticipants) {
         leagueLadderPoints[(index + 1).toString()];
     } else {
       ladderData.participants.push({
-        email: element.email,
         username: element.username,
         account: element.account,
         points: leagueLadderPoints[(index + 1).toString()]
