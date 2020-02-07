@@ -24,6 +24,10 @@ function createLeagueFolderPath(identifier) {
   return "./league_data/" + identifier;
 }
 
+function createLeagueLadderFolderPath(year) {
+  return "./league_ladder/" + year;
+}
+
 function createLeagueLadderFilePath(year, quarter) {
   if (!fs.existsSync("./league_ladder/" + year)) {
     fs.mkdirSync("./league_ladder/" + year);
@@ -126,5 +130,6 @@ module.exports = {
   walletApiPath,
   createLeagueHistoryFolderPath,
   getSortedParticipants,
-  compareRoes
+  compareRoes,
+  createLeagueLadderFolderPath
 };

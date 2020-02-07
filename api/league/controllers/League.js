@@ -88,6 +88,37 @@ module.exports = {
     ctx.send(result);
   },
 
+  getLadderForYear: async ctx => {
+    let year = getParam(ctx.request.url, "year");
+    let leagueLadderFolderPath = league_helper.createLeagueLadderFolderPath(
+      year
+    );
+
+    if (!fs.existsSync(leagueLadderFolderPath)) {
+      ctx.send({});
+      return;
+    }
+
+    var files = fs.readdirSync(leagueLadderFolderPath);
+
+    if (files.length === 0) {
+      ctx.send({});
+      return;
+    } else {
+      var ladderArray = [];
+      files.forEach(fileName => {
+        let rawFiledata = fs.readFileSync(
+          leagueLadderFolderPath + "/" + fileName
+        );
+        let ladderData = JSON.parse(rawFiledata);
+
+        ladderArray.push(ladderData);
+      });
+      ctx.send(ladderArray);
+      return;
+    }
+  },
+
   joinLeague: async ctx => {
     if (!fs.existsSync(league_helper.callForLeagueDataFile)) {
       fs.writeFileSync(
@@ -421,4 +452,13 @@ function getReadingFiles(leagueUniqueIdentifier) {
   const dir = league_helper.createLeagueFolderPath(leagueUniqueIdentifier);
   var files = fs.readdirSync(dir);
   return files;
+}
+
+function getParam(url, name) {
+  if (
+    (name = new RegExp("[?&]" + encodeURIComponent(name) + "=([^&]*)").exec(
+      url
+    ))
+  )
+    return decodeURIComponent(name[1]);
 }

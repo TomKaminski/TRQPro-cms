@@ -24,6 +24,11 @@
       "method": "GET",
       "path": "/league/smallLastReading",
       "handler": "League.indexSmallData"
+    },
+    {
+      "method": "GET",
+      "path": "/league/getLadderForYear",
+      "handler": "League.getLadderForYear"
     }
   ]
 }
