@@ -24,11 +24,6 @@
       "method": "GET",
       "path": "/league/smallLastReading",
       "handler": "League.indexSmallData"
-    },
-    {
-      "method": "GET",
-      "path": "/league/ladderFun",
-      "handler": "League.ladderFun"
     }
   ]
 }

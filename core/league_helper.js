@@ -5,6 +5,8 @@ const affliateStatusApiPath = "/api/v1/user/affiliateStatus";
 const leagueInputDataFile = "./league_data/input.json";
 const callForLeagueDataFile = "./league_data/call_for_league.json";
 
+const fs = require("fs");
+
 function createLeagueFilePath(identifier, fileName, appendJsonExtension) {
   let filePath = createLeagueFolderPath(identifier) + "/" + fileName;
   if (appendJsonExtension) {
@@ -23,10 +25,16 @@ function createLeagueFolderPath(identifier) {
 }
 
 function createLeagueLadderFilePath(year, quarter) {
+  if (!fs.existsSync("./league_ladder/" + year)) {
+    fs.mkdirSync("./league_ladder/" + year);
+  }
+
   if (quarter) {
-    return "./league_ladder/ladder_" + year + "_0" + quarter + ".json";
+    return (
+      "./league_ladder/" + year + "/ladder_" + year + "_0" + quarter + ".json"
+    );
   } else {
-    return "./league_ladder/ladder_" + year + ".json";
+    return "./league_ladder/" + year + "/ladder_" + year + ".json";
   }
 }
 

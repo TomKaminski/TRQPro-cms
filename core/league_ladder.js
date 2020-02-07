@@ -17,11 +17,8 @@ let leagueLadderPoints = {
 };
 
 function distributePointsForLadders(data) {
-  let rawdata = fs.readFileSync("./league_history/test_reading.json");
-  let leagueData = JSON.parse(rawdata);
-
-  let dsqLiqParticipants = getDSQLIQParticipants(leagueData);
-  let best10Participants = getBest10Participants(leagueData);
+  let dsqLiqParticipants = getDSQLIQParticipants(data);
+  let best10Participants = getBest10Participants(data);
 
   distributePointsForYearLadder(best10Participants, dsqLiqParticipants);
 

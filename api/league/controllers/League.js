@@ -192,11 +192,6 @@ module.exports = {
     }
   },
 
-  ladderFun: async ctx => {
-    league_ladder.distributePointsForLadders({});
-    ctx.send("DONE");
-  },
-
   index: async ctx => {
     let rawdata = fs.readFileSync(league_helper.leagueInputDataFile);
     let leagueData = JSON.parse(rawdata);
