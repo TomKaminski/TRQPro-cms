@@ -115,3 +115,5 @@ prod.env
 league_data/*
 league_ladder/*
 league_data/input.json
+league_history/*
+league_ladder/*

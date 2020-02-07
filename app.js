@@ -10,6 +10,7 @@ const moment = require("moment");
 const _ = require("lodash");
 const encrypt_decrypt = require("./core/encrypt_decrypt.js");
 const league_helper = require("./core/league_helper.js");
+const league_ladder = require("./core/league_ladder.js");
 
 moment.fn.toJSON = function() {
   return this.format();
@@ -290,6 +291,7 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
 
     if (isLastReading) {
       readingData = getEndRoe(readingData, filesInfo);
+      league_ladder.distributePointsForLadders(readingData);
       readingData.hasEnded = true;
     }
 

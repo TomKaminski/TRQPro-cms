@@ -4,6 +4,7 @@ const moment = require("moment");
 
 const encrypt_decrypt = require("../../../core/encrypt_decrypt.js");
 const league_helper = require("../../../core/league_helper.js");
+const league_ladder = require("../../../core/league_ladder.js");
 
 module.exports = {
   indexSmallData: async ctx => {
@@ -30,7 +31,9 @@ module.exports = {
       );
       let lastReadingData = JSON.parse(rawFiledata);
 
-      let participantsArray = getValues(lastReadingData.participants);
+      let participantsArray = league_helper.getSortedParticipants(
+        lastReadingData.participants
+      );
       let smallArray = participantsArray.slice(0, 5).map(participant => {
         return {
           name: participant.username,
@@ -75,7 +78,7 @@ module.exports = {
 
     let rawdata = fs.readFileSync(league_helper.callForLeagueDataFile);
     let json = JSON.parse(rawdata);
-    let jsonArray = getValues(json.coming_leagues);
+    let jsonArray = league_helper.getSortedParticipants(json.coming_leagues);
     let result = [];
 
     jsonArray.forEach(league => {
@@ -210,7 +213,9 @@ module.exports = {
       );
       let lastReadingData = JSON.parse(rawFiledata);
 
-      let participantsArray = getValues(lastReadingData.participants);
+      let participantsArray = league_helper.getSortedParticipants(
+        lastReadingData.participants
+      );
 
       var participantsResult = [];
       participantsArray.forEach(participant => {
@@ -403,56 +408,6 @@ async function validateJoinLeagueData(data, participants, signingLimitDate) {
     hashedApiSecret: hashedApiSecret,
     error: null
   };
-}
-
-function getValues(obj) {
-  var values = [];
-  for (var key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      values.push(obj[key]);
-    }
-  }
-  return values.sort(compareRoes);
-}
-
-function compareRoes(a, b) {
-  if (a.isRetarded && b.isRetarded) {
-    return b.roes.length - a.roes.length < 0 ? -1 : 1;
-  }
-
-  if (a.isRekt && b.isRekt) {
-    return b.roes.length - a.roes.length < 0 ? -1 : 1;
-  }
-
-  if (a.tooLowBalance && b.tooLowBalance) {
-    return b.roeCurrent - a.roeCurrent;
-  }
-
-  if (a.isRetarded) {
-    return 1;
-  }
-
-  if (b.isRetarded) {
-    return -1;
-  }
-
-  if (a.tooLowBalance) {
-    return 1;
-  }
-
-  if (b.tooLowBalance) {
-    return -1;
-  }
-
-  if (a.isRekt) {
-    return 1;
-  }
-
-  if (b.isRekt) {
-    return -1;
-  }
-
-  return b.roeCurrent - a.roeCurrent;
 }
 
 function getReadingFiles(leagueUniqueIdentifier) {
