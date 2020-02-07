@@ -112,6 +112,14 @@ module.exports = {
         );
         let ladderData = JSON.parse(rawFiledata);
 
+        let resultParticipants = [];
+
+        ladderData.participants.forEach(participant => {
+          delete participant.email;
+          resultParticipants.push(participant);
+        });
+
+        ladderData.participants = resultParticipants;
         ladderArray.push(ladderData);
       });
       ctx.send(ladderArray);
