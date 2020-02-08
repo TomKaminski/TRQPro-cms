@@ -60,7 +60,6 @@ module.exports = {
     let key = Object.keys(comingLeagues)[0];
     var actions = comingLeagues[key].participants.map(validateRefferal);
 
-    console.log(actions.length);
     await Promise.all(actions).then(responses => {
       ctx.send(responses);
     });
