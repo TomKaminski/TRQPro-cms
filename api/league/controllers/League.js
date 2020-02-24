@@ -6,7 +6,28 @@ const encrypt_decrypt = require("../../../core/encrypt_decrypt.js");
 const league_helper = require("../../../core/league_helper.js");
 const league_ladder = require("../../../core/league_ladder.js");
 
+const Binance = require("node-binance-api");
+const binance = new Binance().options({
+  APIKEY: "6YXBn9qJM7HFxNKlBYMQ9IrmdYRyNHeXM8cPz33N3MepGqHTd15jdQOb98EFmD8q",
+  APISECRET: "wlWKNdm5H7xAbo6BflWlmWzcUs3GSxPmjXHImkjIpNyFISsmHzZdDReF0F4vuR1h"
+});
+
 module.exports = {
+  binanceTest: async ctx => {
+    // // Current futures positions
+    // console.info(await binance.futuresAccount());
+
+    // // Futures balances
+    // console.info(await binance.futuresBalance());
+
+    binance.account((error, acc) => {
+      if (error) return console.error(error);
+      console.info("acc", acc);
+    });
+
+    ctx.send("DONE");
+  },
+
   indexSmallData: async ctx => {
     let rawdata = fs.readFileSync(league_helper.leagueInputDataFile);
     let leagueData = JSON.parse(rawdata);
