@@ -56,7 +56,6 @@
       }
       .logo {
         height: 40px;
-        margin-bottom: 74px;
       }
       .informations {
         position: relative;
@@ -65,7 +64,7 @@
         justify-content: space-between;
         width: 100%;
         height: 126px;
-        margin-top: 18px;
+        margin-top: 92px;
         padding: 20px 30px;
         background: #fff;
         border-radius: 2px;
@@ -79,18 +78,18 @@
         display: block;
         width: 100%;
         height: 2px;
-        background: #007eff;
+        background: #6dbb1a;
       }
       .environment {
         display: inline-block;
         padding: 0 10px;
         height: 20px;
         margin-bottom: 36px;
-        background: #e6f0fb;
-        border: 1px solid #aed4fb;
+        background: #e9f5dd;
+        border: 1px solid #6dbb1a;
         border-radius: 2px;
         text-transform: uppercase;
-        color: #007eff;
+        color: #6dbb1a;
         font-size: 1.2rem;
         font-weight: 700;
         line-height: 20px;
@@ -122,37 +121,10 @@
         background: #007eff;
       }
       .cta-secondary {
-        background: #6dbb1a;
+        background: #;
       }
       .text-align-right {
         text-align: right;
-      }
-      .lets-started {
-        position: relative;
-        overflow: hidden;
-        width: 100%;
-        height: 144px;
-        margin-top: 18px;
-        padding: 20px 30px;
-        background: #fff;
-        border-radius: 2px;
-        box-shadow: 0 2px 4px 0 #e3e9f3;
-      }
-      .people-saying-hello {
-        position: absolute;
-        right: 30px;
-        bottom: -8px;
-        width: 113px;
-        height: 70px;
-      }
-      .visible {
-        opacity: 1 !important;
-      }
-      .people-saying-hello img {
-        position: absolute;
-        max-width: 100%;
-        opacity: 0;
-        transition: opacity 0.2s ease-out;
       }
       @media only screen and (max-width: 768px) {
         .wrapper {
@@ -163,6 +135,9 @@
           flex-direction: column;
           height: auto;
         }
+        .informations p {
+          text-align: center;
+        }
         .environment {
           width: 100%;
           text-align: center;
@@ -171,16 +146,6 @@
         .text-align-right {
           margin-top: 18px;
           text-align: center;
-        }
-        .cta {
-          width: 100%;
-          text-align: center;
-        }
-        .lets-started {
-          height: auto;
-        }
-        .people-saying-hello {
-          display: none;
         }
       }
     </style>
@@ -193,81 +158,15 @@
           src="https://strapi.io/assets/images/logo_login.png"
         />
       </h1>
-      <% if (isInitialised) { %>
       <div class="informations">
         <div>
           <span class="environment"><%= strapi.config.environment %></span>
-          <p>
-            The server is running successfully (<strong
-              >v<%= strapi.config.info.version %>)</strong
-            >
-          </p>
+          <p>The server is running successfully.</p>
         </div>
         <div class="text-align-right">
           <p><%= serverTime %></p>
-          <a
-            class="cta cta-primary"
-            href="<%= strapi.config.admin.url %>"
-            target="_blank"
-            title="Click to open the administration"
-            ><i class="fas fa-external-link-alt"></i>Open the administration</a
-          >
         </div>
       </div>
-      <% } %> <% if (!isInitialised) { %>
-
-      <div class="lets-started">
-        <h2>Let's get started!</h2>
-        <p>
-          To discover the power provided by Strapi, you need to create an
-          administrator.
-        </p>
-        <a
-          class="cta cta-secondary"
-          href="<%= strapi.config.admin.url %>"
-          target="_blank"
-          title="Click to create the first administration"
-          ><i class="fas fa-external-link-alt"></i>Create the first
-          administrator</a
-        >
-        <div class="people-saying-hello">
-          <img
-            class="visible"
-            src="https://strapi.io/assets/images/group_people_1.png"
-            alt="People saying hello"
-          />
-          <img
-            src="https://strapi.io/assets/images/group_people_2.png"
-            alt="People saying hello"
-          />
-          <img
-            src="https://strapi.io/assets/images/group_people_3.png"
-            alt="People saying hello"
-          />
-        </div>
-      </div>
-
-      <% } %>
     </section>
-    <script>
-      var images = document.querySelectorAll(".people-saying-hello img");
-      var nextIndex = 0;
-      setInterval(function() {
-        var currentIndex = 0;
-        images.forEach(function(image, index) {
-          if (image.className === "visible") {
-            currentIndex = index;
-          }
-        });
-        nextIndex = currentIndex + 1;
-        if (nextIndex === images.length) {
-          nextIndex = 0;
-        }
-        images.forEach(function(image) {
-          image.classList.remove("visible");
-        });
-        images[nextIndex].classList.add("visible");
-      }, 1500);
-    </script>
   </body>
 </html>
