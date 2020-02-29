@@ -132,7 +132,7 @@ function processLadderData(
   for (let index = 0; index < baseData.length; index++) {
     const element = baseData[index];
     const indexInLadder = _.findIndex(ladderData.participants, function(o) {
-      return o.email == element.email;
+      return o.email == element.email || o.account == element.account;
     });
     if (indexInLadder == -1) {
       ladderData.participants.push({
@@ -164,7 +164,7 @@ function processLadderData(
   for (let index = 0; index < best10Participants.length; index++) {
     const element = best10Participants[index];
     const indexInLadder = _.findIndex(ladderData.participants, function(o) {
-      return o.email == element.email;
+      return o.email == element.email || o.account == element.account;
     });
     if (indexInLadder != -1) {
       ladderData.participants[indexInLadder].points +=
@@ -174,7 +174,7 @@ function processLadderData(
   for (let index = 0; index < dsqLiqParticipants.length; index++) {
     const element = dsqLiqParticipants[index];
     const indexInLadder = _.findIndex(ladderData.participants, function(o) {
-      return o.email == element.email;
+      return o.email == element.email || o.account == element.account;
     });
     if (indexInLadder != -1) {
       ladderData.participants[indexInLadder].points +=
