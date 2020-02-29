@@ -33,9 +33,9 @@
       "type": "json"
     },
     "author": {
+      "plugin": "users-permissions",
       "model": "user",
-      "via": "articles",
-      "plugin": "users-permissions"
+      "via": "articles"
     },
     "category": {
       "model": "category",
@@ -47,7 +47,7 @@
       "dominant": true
     },
     "publishedAt": {
-      "type": "date"
+      "type": "datetime"
     }
   }
 }
