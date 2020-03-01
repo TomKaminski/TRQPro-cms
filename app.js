@@ -1,7 +1,5 @@
 "use strict";
 
-require("dotenv").config();
-
 const fs = require("fs");
 const md5 = require("md5");
 const schedule = require("node-schedule");
@@ -12,12 +10,14 @@ const encrypt_decrypt = require("./core/encrypt_decrypt.js");
 const league_helper = require("./core/league_helper.js");
 const league_ladder = require("./core/league_ladder.js");
 
+const dotenv = require("dotenv");
+const strapi = require("strapi");
+
 moment.fn.toJSON = function() {
   return this.format();
 };
 
-// Start Strapi
-const strapi = require("strapi");
+dotenv.config();
 strapi().start();
 
 let md5Previous = null;
