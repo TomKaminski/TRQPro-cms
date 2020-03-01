@@ -82,17 +82,19 @@ function setupJob() {
       );
       let lastReadingData = JSON.parse(rawFiledata);
 
-      console.log(
-        "Scheduling next reading for",
-        lastReadingData.nextReadingDate
-      );
-      let job = schedule.scheduleJob(
-        lastReadingData.nextReadingDate,
-        function() {
-          createReadingFile(leagueData, lastReadingData, files);
-        }
-      );
-      return job;
+      if (lastReadingData.isLastReading === false) {
+        console.log(
+          "Scheduling next reading for",
+          lastReadingData.nextReadingDate
+        );
+        let job = schedule.scheduleJob(
+          lastReadingData.nextReadingDate,
+          function() {
+            createReadingFile(leagueData, lastReadingData, files);
+          }
+        );
+        return job;
+      }
     }
   }
 }
