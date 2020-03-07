@@ -82,7 +82,7 @@ function setupJob() {
       );
       let lastReadingData = JSON.parse(rawFiledata);
 
-      if (lastReadingData.isLastReading === false) {
+      if (!lastReadingData.hasEnded) {
         console.log(
           "Scheduling next reading for",
           lastReadingData.nextReadingDate
@@ -94,6 +94,8 @@ function setupJob() {
           }
         );
         return job;
+      } else {
+        console.log("LEAGUE END");
       }
     }
   }
