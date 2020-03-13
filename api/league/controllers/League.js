@@ -4,9 +4,14 @@ const moment = require("moment");
 
 const encrypt_decrypt = require("../../../core/encrypt_decrypt.js");
 const league_helper = require("../../../core/league_helper.js");
-const league_ladder = require("../../../core/league_ladder.js");
+const bybit_service = require("../../../core/exchanges/bybit/bybit_service.js");
 
 module.exports = {
+  testBybit: async ctx => {
+    await bybit_service.testByBit();
+    ctx.send("DONE");
+  },
+
   indexSmallData: async ctx => {
     let rawdata = fs.readFileSync(league_helper.leagueInputDataFile);
     let leagueData = JSON.parse(rawdata);
