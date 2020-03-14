@@ -8,8 +8,8 @@ const bybit_service = require("../../../core/exchanges/bybit/bybit_service.js");
 
 module.exports = {
   testBybit: async ctx => {
-    await bybit_service.testByBit();
-    ctx.send("DONE");
+    const response = await bybit_service.getReadings();
+    ctx.send(response);
   },
 
   indexSmallData: async ctx => {
