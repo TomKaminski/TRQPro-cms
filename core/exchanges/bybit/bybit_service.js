@@ -23,6 +23,22 @@ async function getReadings() {
   };
 }
 
+async function validateApiKey(apiKey, apiSecret, leagueEndDate) {
+  try {
+    let accInfo = _transformApiKeyResponse(
+      await _getApiKeyInfo(apiKey, apiSecret)
+    );
+
+    if (accInfo.expired_at > leagueEndDate) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch {
+    return false;
+  }
+}
+
 async function getUserReading(apiKey, apiSecret, symbols) {
   let accInfo = _transformApiKeyResponse(
     await _getApiKeyInfo(apiKey, apiSecret)
@@ -86,6 +102,7 @@ async function _getApiKeyInfo(apiKey, apiSecret) {
       apiSecret,
       {}
     );
+    console.log(response.data);
     return response.data;
   } catch (error) {
     console.log(error);
@@ -163,12 +180,17 @@ function _transformDepositResponse(object) {
 }
 
 function _transformApiKeyResponse(object) {
+  if (object.result.length == 0) {
+    throw "API Key not found!";
+  }
+
   let firstApiKey = object.result[0];
   return {
     user_id: firstApiKey.user_id,
     note: firstApiKey.note,
     inviter_id: firstApiKey.inviter_id,
-    read_only: firstApiKey.read_only
+    read_only: firstApiKey.read_only,
+    expired_at: firstApiKey.expired_at
   };
 }
 
@@ -194,5 +216,6 @@ function _getCoinInUSDT(coinIndexPrice, amount) {
 }
 
 module.exports = {
-  getReadings
+  getReadings,
+  validateApiKey
 };

@@ -171,7 +171,8 @@ module.exports = {
             let validatedData = await validateJoinLeagueData(
               jsonBody,
               leagueData.participants,
-              leagueData.signingLimitDate
+              leagueData.signingLimitDate,
+              leagueData.endDate
             );
 
             validityResult = validatedData;
@@ -191,7 +192,8 @@ module.exports = {
                 username: jsonBody.nickname,
                 email: jsonBody.email,
                 apiKey: jsonBody.apiKey,
-                apiSecret: validityResult.hashedApiSecret
+                apiSecret: validityResult.hashedApiSecret,
+                exchange: jsonBody.exchange
               });
             }
           }
@@ -211,7 +213,8 @@ module.exports = {
       let validatedData = await validateJoinLeagueData(
         jsonBody,
         callForLeagueData.coming_leagues[jsonBody.league].participants,
-        callForLeagueData.coming_leagues[jsonBody.league].signingLimitDate
+        callForLeagueData.coming_leagues[jsonBody.league].signingLimitDate,
+        callForLeagueData.coming_leagues[jsonBody.league].endDate
       );
 
       if (validatedData.isValid) {
@@ -219,7 +222,8 @@ module.exports = {
           username: jsonBody.nickname,
           email: jsonBody.email,
           apiKey: jsonBody.apiKey,
-          apiSecret: validatedData.hashedApiSecret
+          apiSecret: validatedData.hashedApiSecret,
+          exchange: jsonBody.exchange
         });
 
         fs.writeFileSync(
@@ -274,31 +278,50 @@ module.exports = {
   }
 };
 
-async function validateApiKeyAndSecret(apiKey, apiSecret) {
-  var verb = "GET",
-    path = league_helper.wallerSummaryApiPath,
-    expires = Math.round(new Date().getTime() / 1000) + 60;
+async function validateApiKeyAndSecret(
+  apiKey,
+  apiSecret,
+  exchange,
+  leagueEndDate
+) {
+  if (exchange == "bitmex") {
+    var verb = "GET",
+      path = league_helper.wallerSummaryApiPath,
+      expires = Math.round(new Date().getTime() / 1000) + 60;
 
-  const signature = encrypt_decrypt.getBitmexSignature(
-    apiSecret,
-    verb,
-    path,
-    expires
-  );
+    const signature = encrypt_decrypt.getBitmexSignature(
+      apiSecret,
+      verb,
+      path,
+      expires
+    );
 
-  const headers = league_helper.generateApiHeaders(expires, apiKey, signature);
-  const config = league_helper.generateRequestConfig(headers, path, verb);
+    const headers = league_helper.generateApiHeaders(
+      expires,
+      apiKey,
+      signature
+    );
+    const config = league_helper.generateRequestConfig(headers, path, verb);
 
-  try {
-    let res = await axios.request(config);
-    if (res.status === 200) {
-      return true;
-    } else {
+    try {
+      let res = await axios.request(config);
+      if (res.status === 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
       return false;
     }
-  } catch (error) {
-    return false;
+  } else if (exchange == "bybit") {
+    console.log(apiKey);
+    console.log(apiSecret);
+    console.log(exchange);
+    console.log(leagueEndDate);
+
+    return await bybit_service.validateApiKey(apiKey, apiSecret, leagueEndDate);
   }
+  return false;
 }
 
 async function validateRefferal(participant) {
@@ -401,18 +424,26 @@ function isNullOrEmpty(data) {
   return data === undefined || data === null || data === "";
 }
 
-async function validateJoinLeagueData(data, participants, signingLimitDate) {
+async function validateJoinLeagueData(
+  data,
+  participants,
+  signingLimitDate,
+  leagueEndDate
+) {
   if (
     isNullOrEmpty(data.apiSecret) ||
     isNullOrEmpty(data.apiKey) ||
     isNullOrEmpty(data.nickname) ||
-    isNullOrEmpty(data.email)
+    isNullOrEmpty(data.email) ||
+    isNullOrEmpty(data.exchange)
   ) {
     return {
       isValid: false,
       error: "Nieprawidłowe dane."
     };
   }
+
+  console.log(data);
 
   if (new Date(signingLimitDate) < new Date()) {
     return {
@@ -421,7 +452,14 @@ async function validateJoinLeagueData(data, participants, signingLimitDate) {
     };
   }
 
-  if ((await validateApiKeyAndSecret(data.apiKey, data.apiSecret)) === false) {
+  if (
+    (await validateApiKeyAndSecret(
+      data.apiKey,
+      data.apiSecret,
+      data.exchange,
+      leagueEndDate
+    )) === false
+  ) {
     return {
       isValid: false,
       error: "Podane klucze API są nieprawidłowe."
