@@ -116,11 +116,13 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
       }
     });
   } else {
-    actions = leagueData.participants.map(
-      value.exchange === "bitmex"
-        ? bitmex_service.getParticipantCurrentWalletInfo
-        : bybit_service.getUserReading
-    );
+    actions = leagueData.participants.map(participant => {
+      if (participant.exchange === "bitmex") {
+        return bitmex_service.getParticipantCurrentWalletInfo(participant);
+      } else {
+        return bybit_service.getUserReading(participant);
+      }
+    });
   }
 
   var nextReadingDate = moment(

@@ -1,7 +1,6 @@
 const client = require("./bybit_client.js");
-
-const apiKey = "fS9xJxQNXRdL3IFr2V";
-const apiSecret = "dTmCaNBlEpTve2LmVHUQZRvZQCR6XJBQxQaV";
+const encrypt_decrypt = require("./../../encrypt_decrypt.js");
+const league_helper = require("./../../league_helper.js");
 
 const BTCUSDSymbol = "BTCUSD";
 const ETHUSDSymbol = "ETHUSD";
@@ -25,7 +24,7 @@ function _checkIfRetarded(response) {
 function processParticipantReading(
   response,
   readingData,
-  previousReadingData,
+  previousReadingFileData,
   symbols
 ) {
   if (response.inner.status === 200) {
@@ -230,7 +229,7 @@ async function getUserReading(participant, previousData) {
   }
 }
 
-async function _getApiKeyInfo() {
+async function _getApiKeyInfo(apiKey, apiSecret) {
   const response = await client.get("/open-api/api-key", apiKey, apiSecret, {});
   console.log(response.data);
   return response.data;
