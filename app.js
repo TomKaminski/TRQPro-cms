@@ -3,12 +3,11 @@
 const fs = require("fs");
 const md5 = require("md5");
 const schedule = require("node-schedule");
-const axios = require("axios");
 const moment = require("moment");
 const _ = require("lodash");
-const encrypt_decrypt = require("./core/encrypt_decrypt.js");
 const league_helper = require("./core/league_helper.js");
 const league_ladder = require("./core/league_ladder.js");
+const bitmex_service = require("./core/exchanges/bitmex/bitmex_service.js");
 
 const dotenv = require("dotenv");
 const strapi = require("strapi");
@@ -135,10 +134,12 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
         previousReadingFileData.participants,
         participantData => participantData.email === value.email
       );
-      return getParticipantCurrentWalletInfo(value, prevData);
+      return bitmex_service.getParticipantCurrentWalletInfo(value, prevData);
     });
   } else {
-    actions = leagueData.participants.map(getParticipantCurrentWalletInfo);
+    actions = leagueData.participants.map(
+      bitmex_service.getParticipantCurrentWalletInfo
+    );
   }
 
   var nextReadingDate = moment(
@@ -373,61 +374,6 @@ function getEndRoe(readingData, files) {
 function getRoe(prev, current) {
   let roe = (current / prev) * 100 - 100;
   return roe;
-}
-
-async function getParticipantCurrentWalletInfo(participant, previousData) {
-  if (
-    previousData &&
-    (previousData.isRetarded ||
-      previousData.isRekt ||
-      previousData.tooLowBalance)
-  ) {
-    console.log("skip participant:" + participant.email);
-    return {
-      inner: {
-        status: 201,
-        previousData
-      },
-      participant
-    };
-  }
-
-  var verb = "GET",
-    path = league_helper.wallerSummaryApiPath,
-    expires = Math.round(new Date().getTime() / 1000) + 60;
-
-  const signature = encrypt_decrypt.getBitmexSignature(
-    encrypt_decrypt.decrypt(participant.apiSecret),
-    verb,
-    path,
-    expires
-  );
-
-  const headers = league_helper.generateApiHeaders(
-    expires,
-    participant.apiKey,
-    signature
-  );
-
-  const requestConfig = league_helper.generateRequestConfig(
-    headers,
-    path,
-    verb
-  );
-
-  try {
-    return {
-      inner: await axios.request(requestConfig),
-      participant
-    };
-  } catch {
-    return {
-      inner: {
-        status: 401
-      },
-      participant
-    };
-  }
 }
 
 function createReadingFileName(date) {

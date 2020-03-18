@@ -1,10 +1,10 @@
 const fs = require("fs");
-const axios = require("axios");
 const moment = require("moment");
 
 const encrypt_decrypt = require("../../../core/encrypt_decrypt.js");
 const league_helper = require("../../../core/league_helper.js");
 const bybit_service = require("../../../core/exchanges/bybit/bybit_service.js");
+const bitmex_service = require("../../../core/exchanges/bitmex/bitmex_service.js");
 
 module.exports = {
   testBybit: async ctx => {
@@ -285,83 +285,16 @@ async function validateApiKeyAndSecret(
   leagueEndDate
 ) {
   if (exchange == "bitmex") {
-    var verb = "GET",
-      path = league_helper.wallerSummaryApiPath,
-      expires = Math.round(new Date().getTime() / 1000) + 60;
-
-    const signature = encrypt_decrypt.getBitmexSignature(
-      apiSecret,
-      verb,
-      path,
-      expires
-    );
-
-    const headers = league_helper.generateApiHeaders(
-      expires,
-      apiKey,
-      signature
-    );
-    const config = league_helper.generateRequestConfig(headers, path, verb);
-
-    try {
-      let res = await axios.request(config);
-      if (res.status === 200) {
-        return true;
-      } else {
-        return false;
-      }
-    } catch (error) {
-      return false;
-    }
+    return await bitmex_service.validateApiKeyAndSecret(apiKey, apiSecret);
   } else if (exchange == "bybit") {
-    console.log(apiKey);
-    console.log(apiSecret);
-    console.log(exchange);
-    console.log(leagueEndDate);
-
     return await bybit_service.validateApiKey(apiKey, apiSecret, leagueEndDate);
   }
   return false;
 }
 
 async function validateRefferal(participant) {
-  var verb = "GET",
-    path = league_helper.affliateStatusApiPath,
-    expires = Math.round(new Date().getTime() / 1000) + 60;
-
-  const signature = encrypt_decrypt.getBitmexSignature(
-    encrypt_decrypt.decrypt(participant.apiSecret),
-    verb,
-    path,
-    expires
-  );
-
-  const headers = league_helper.generateApiHeaders(
-    expires,
-    participant.apiKey,
-    signature
-  );
-  const config = league_helper.generateRequestConfig(headers, path, verb);
-
-  try {
-    let res = await axios.request(config);
-    if (res.status === 200) {
-      return {
-        nick: participant.username,
-        refId: res.data.referrerAccount
-      };
-    } else {
-      return {
-        nick: participant.username,
-        refId: -1
-      };
-    }
-  } catch (error) {
-    return {
-      nick: participant.username,
-      refId: -1
-    };
-  }
+  const decryptedSecret = encrypt_decrypt.decrypt(participant.apiSecret);
+  return bitmex_service.validateRefferal(participant.apiKey, decryptedSecret);
 }
 
 function tryGetComingLeagueParticipantsCount() {

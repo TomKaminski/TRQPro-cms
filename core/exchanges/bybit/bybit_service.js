@@ -1,7 +1,7 @@
 const client = require("./bybit_client.js");
 
-const apiKey = "q3uJAPn40B4JogiAY3";
-const apiSecret = "5Jo30vYti1m5ifOJm7u1Sqmd1paFtzV848vX";
+const apiKey = "fS9xJxQNXRdL3IFr2V";
+const apiSecret = "dTmCaNBlEpTve2LmVHUQZRvZQCR6XJBQxQaV";
 
 const BTCUSDSymbol = "BTCUSD";
 const ETHUSDSymbol = "ETHUSD";
@@ -94,7 +94,7 @@ async function getUserReading(apiKey, apiSecret, symbols) {
   };
 }
 
-async function _getApiKeyInfo(apiKey, apiSecret) {
+async function _getApiKeyInfo() {
   try {
     const response = await client.get(
       "/open-api/api-key",
@@ -217,5 +217,6 @@ function _getCoinInUSDT(coinIndexPrice, amount) {
 
 module.exports = {
   getReadings,
-  validateApiKey
+  validateApiKey,
+  _getApiKeyInfo
 };
