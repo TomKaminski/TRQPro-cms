@@ -8,6 +8,7 @@ const moment = require("moment");
 const league_helper = require("./core/league_helper.js");
 const league_ladder = require("./core/league_ladder.js");
 const bitmex_service = require("./core/exchanges/bitmex/bitmex_service.js");
+const bybit_service = require("./core/exchanges/bybit/bybit_service.js");
 
 const dotenv = require("dotenv");
 const strapi = require("strapi");
@@ -108,11 +109,17 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
         previousReadingFileData.participants,
         participantData => participantData.email === value.email
       );
-      return bitmex_service.getParticipantCurrentWalletInfo(value, prevData);
+      if (value.exchange === "bitmex") {
+        return bitmex_service.getParticipantCurrentWalletInfo(value, prevData);
+      } else {
+        return bybit_service.getUserReading(value, prevData);
+      }
     });
   } else {
     actions = leagueData.participants.map(
-      bitmex_service.getParticipantCurrentWalletInfo
+      value.exchange === "bitmex"
+        ? bitmex_service.getParticipantCurrentWalletInfo
+        : bybit_service.getUserReading
     );
   }
 
@@ -140,35 +147,45 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
     totallyEmptyAccounts: []
   };
 
-  Promise.all(actions).then(responses => {
-    responses.forEach(response => {
-      //if (response.participant.exchange === "bitmex") {
-      bitmex_service.processParticipantReading(
-        response,
-        readingData,
-        previousReadingFileData
+  //todo: better handle dis tickers :)
+  bybit_service.getBybitTickers().then(symbols => {
+    Promise.all(actions).then(responses => {
+      responses.forEach(response => {
+        if (response.participant.exchange === "bitmex") {
+          bitmex_service.processParticipantReading(
+            response,
+            readingData,
+            previousReadingFileData
+          );
+        } else {
+          bybit_service.processParticipantReading(
+            response,
+            readingData,
+            previousReadingFileData,
+            symbols
+          );
+        }
+      });
+
+      readingData = league_helper.get1dRoe(readingData, filesInfo);
+      readingData = league_helper.get3dRoe(readingData, filesInfo);
+      readingData = league_helper.get7dRoe(readingData, filesInfo);
+      readingData = league_helper.get14dRoe(readingData, filesInfo);
+
+      if (isLastReading) {
+        readingData = league_helper.getEndRoe(readingData, filesInfo);
+        league_ladder.distributePointsForLadders(readingData);
+        readingData.hasEnded = true;
+      }
+
+      league_helper.saveReadingFile(
+        leagueData.leagueUniqueIdentifier,
+        readingData
       );
-      //}
+
+      if (!isLastReading) {
+        setupJob();
+      }
     });
-
-    readingData = league_helper.get1dRoe(readingData, filesInfo);
-    readingData = league_helper.get3dRoe(readingData, filesInfo);
-    readingData = league_helper.get7dRoe(readingData, filesInfo);
-    readingData = league_helper.get14dRoe(readingData, filesInfo);
-
-    if (isLastReading) {
-      readingData = league_helper.getEndRoe(readingData, filesInfo);
-      league_ladder.distributePointsForLadders(readingData);
-      readingData.hasEnded = true;
-    }
-
-    league_helper.saveReadingFile(
-      leagueData.leagueUniqueIdentifier,
-      readingData
-    );
-
-    if (!isLastReading) {
-      setupJob();
-    }
   });
 }

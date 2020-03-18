@@ -14,13 +14,114 @@ const ETHCoin = "ETH";
 const EOSCoin = "EOS";
 const USDCoin = "USDT";
 
-async function getReadings() {
-  let symbols = await _getBybitTickers();
+function getAccountDictKey(account) {
+  return "bybit_" + account.toString();
+}
 
-  return {
-    symbols,
-    users: [await getUserReading(apiKey, apiSecret, symbols)]
-  };
+function _checkIfRetarded(response) {
+  return response.inner.deposits.length != 0;
+}
+
+function processParticipantReading(
+  response,
+  readingData,
+  previousReadingData,
+  symbols
+) {
+  if (response.inner.status === 200) {
+    let accDictKey = getAccountDictKey(response.inner.accInfo.user_id);
+    let wallets = response.inner.wallets;
+    const totalUsdt = _getTotalUSDT(
+      symbols,
+      wallets.BTC.equity,
+      wallets.EOS.equity,
+      wallets.XRP.equity,
+      wallets.ETH.equity,
+      wallets.USDT.equity
+    );
+
+    var roeCurrent = 0;
+    var isRekt = false;
+    var startingBalance = totalUsdt;
+    var isRetarded = false;
+    var nextRoes = [0];
+    var tooLowBalance = false;
+
+    if (previousReadingFileData) {
+      if (!previousReadingFileData.participants[accDictKey]) {
+        console.log(
+          "Total entry found but previous file doesnt contain participant. Hacking!"
+        );
+        console.log(response.participant.username);
+
+        let { email, username } = response.participant;
+        readingData.totallyEmptyAccounts.push({
+          email,
+          username
+        });
+        return;
+      }
+
+      roeCurrent = league_helper.getRoe(
+        previousReadingFileData.participants[accDictKey].startingBalance,
+        totalUsdt
+      );
+
+      startingBalance =
+        previousReadingFileData.participants[accDictKey].startingBalance;
+
+      tooLowBalance =
+        previousReadingFileData.participants[accDictKey].tooLowBalance ===
+          true || false;
+
+      isRekt =
+        previousReadingFileData.participants[accDictKey].isRekt === true ||
+        roeCurrent <= -99.0;
+
+      isRetarded =
+        previousReadingFileData.participants[accDictKey].isRetarded === true ||
+        _checkIfRetarded(response);
+
+      nextRoes = previousReadingFileData.participants[accDictKey].roes
+        ? previousReadingFileData.participants[accDictKey].roes
+        : [];
+      nextRoes.push(Math.round(roeCurrent * 1e2) / 1e2);
+    } else {
+      if (startingBalance < 50) {
+        tooLowBalance = true;
+      }
+    }
+
+    readingData.participants[accDictKey] = {
+      balance: totalUsdt,
+      account: response.inner.accInfo.user_id,
+      deposits: response.inner.deposits,
+      username: response.participant.username,
+      email: response.participant.email,
+      startingBalance: startingBalance,
+      roeCurrent: roeCurrent,
+      roe1d: null,
+      roe3d: null,
+      roe7d: null,
+      roe14d: null,
+      roeEnd: null,
+      isRekt,
+      isRetarded,
+      tooLowBalance,
+      roes: nextRoes
+    };
+  } else if (response.inner.status === 201) {
+    readingData.participants[
+      getAccountDictKey(response.inner.previousData.account)
+    ] = response.inner.previousData;
+  } else {
+    let { email, username } = response.participant;
+    readingData.totallyEmptyAccounts.push({
+      email,
+      username
+    });
+    return;
+  }
 }
 
 async function validateApiKey(apiKey, apiSecret, leagueEndDate) {
@@ -51,119 +152,117 @@ async function validateRefferal(apiKey, apiSecret) {
   }
 }
 
-async function getUserReading(apiKey, apiSecret, symbols) {
-  let accInfo = _transformApiKeyResponse(
-    await _getApiKeyInfo(apiKey, apiSecret)
-  );
+async function getUserReading(participant, previousData) {
+  if (
+    previousData &&
+    (previousData.isRetarded ||
+      previousData.isRekt ||
+      previousData.tooLowBalance)
+  ) {
+    return {
+      inner: {
+        status: 201,
+        previousData
+      },
+      participant
+    };
+  }
 
-  let deposits = _transformDepositResponse(
-    await _getDeposits(apiKey, apiSecret)
-  );
+  const apiKey = participant.apiKey;
+  const apiSecret = encrypt_decrypt.decrypt(participant.apiSecret);
 
-  let btcData = _transformWalletResponse(
-    await _getWalletData(apiKey, apiSecret, BTCCoin),
-    BTCCoin
-  );
+  try {
+    let accInfo = _transformApiKeyResponse(
+      await _getApiKeyInfo(apiKey, apiSecret)
+    );
 
-  let xrpData = _transformWalletResponse(
-    await _getWalletData(apiKey, apiSecret, XRPCoin),
-    XRPCoin
-  );
+    let deposits = _transformDepositResponse(
+      await _getDeposits(apiKey, apiSecret)
+    );
 
-  let ethData = _transformWalletResponse(
-    await _getWalletData(apiKey, apiSecret, ETHCoin),
-    ETHCoin
-  );
+    let btcData = _transformWalletResponse(
+      await _getWalletData(apiKey, apiSecret, BTCCoin),
+      BTCCoin
+    );
 
-  let eosData = _transformWalletResponse(
-    await _getWalletData(apiKey, apiSecret, EOSCoin),
-    EOSCoin
-  );
+    let xrpData = _transformWalletResponse(
+      await _getWalletData(apiKey, apiSecret, XRPCoin),
+      XRPCoin
+    );
 
-  let usdtData = _transformWalletResponse(
-    await _getWalletData(apiKey, apiSecret, USDCoin),
-    USDCoin
-  );
+    let ethData = _transformWalletResponse(
+      await _getWalletData(apiKey, apiSecret, ETHCoin),
+      ETHCoin
+    );
 
-  return {
-    accInfo,
-    deposits,
-    wallets: {
-      BTC: btcData,
-      XRP: xrpData,
-      ETH: ethData,
-      EOS: eosData,
-      USDT: usdtData
-    },
-    totalUSDT: _getTotalUSDT(
-      symbols,
-      btcData.equity,
-      eosData.equity,
-      xrpData.equity,
-      ethData.equity,
-      usdtData.equity
-    )
-  };
+    let eosData = _transformWalletResponse(
+      await _getWalletData(apiKey, apiSecret, EOSCoin),
+      EOSCoin
+    );
+
+    let usdtData = _transformWalletResponse(
+      await _getWalletData(apiKey, apiSecret, USDCoin),
+      USDCoin
+    );
+
+    return {
+      inner: {
+        status: 200,
+        accInfo,
+        deposits,
+        wallets: {
+          BTC: btcData,
+          XRP: xrpData,
+          ETH: ethData,
+          EOS: eosData,
+          USDT: usdtData
+        }
+      },
+      participant
+    };
+  } catch (error) {
+    return {
+      inner: {
+        status: 401
+      },
+      participant
+    };
+  }
 }
 
 async function _getApiKeyInfo() {
-  try {
-    const response = await client.get(
-      "/open-api/api-key",
-      apiKey,
-      apiSecret,
-      {}
-    );
-    console.log(response.data);
-    return response.data;
-  } catch (error) {
-    console.log(error);
-    return [];
-  }
+  const response = await client.get("/open-api/api-key", apiKey, apiSecret, {});
+  console.log(response.data);
+  return response.data;
 }
 
 async function _getWalletData(apiKey, apiSecret, coin) {
-  try {
-    const response = await client.get(
-      "/v2/private/wallet/balance",
-      apiKey,
-      apiSecret,
-      {
-        coin
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.log(error);
-    return [];
-  }
+  const response = await client.get(
+    "/v2/private/wallet/balance",
+    apiKey,
+    apiSecret,
+    {
+      coin
+    }
+  );
+  return response.data;
 }
 
 async function _getDeposits(apiKey, apiSecret) {
-  try {
-    const response = await client.get(
-      "/open-api/wallet/fund/records",
-      apiKey,
-      apiSecret,
-      {
-        wallet_fund_type: "Deposit"
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.log(error);
-    return [];
-  }
+  const response = await client.get(
+    "/open-api/wallet/fund/records",
+    apiKey,
+    apiSecret,
+    {
+      wallet_fund_type: "Deposit"
+    }
+  );
+  return response.data;
 }
 
-async function _getBybitTickers() {
-  try {
-    const response = await client.publicGet("/v2/public/tickers");
-    return _transformTickersResponse(response.data.result);
-  } catch (error) {
-    console.log(error);
-    return [];
-  }
+async function getBybitTickers() {
+  const response = await client.publicGet("/v2/public/tickers");
+  return _transformTickersResponse(response.data.result);
 }
 
 function _transformTickersResponse(array) {
@@ -228,7 +327,9 @@ function _getCoinInUSDT(coinIndexPrice, amount) {
 }
 
 module.exports = {
-  getReadings,
+  processParticipantReading,
+  getUserReading,
+  getBybitTickers,
   validateRefferal,
   validateApiKey,
   _getApiKeyInfo

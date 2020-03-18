@@ -7,6 +7,10 @@ const league_helper = require("./../../league_helper.js");
 const walletSummaryApiPath = "/api/v1/user/walletSummary?currency=XBt";
 const affliateStatusApiPath = "/api/v1/user/affiliateStatus";
 
+function getAccountDictKey(account) {
+  return "bitmex_" + account.toString();
+}
+
 function processParticipantReading(
   response,
   readingData,
@@ -35,10 +39,10 @@ function processParticipantReading(
     var nextRoes = [0];
     var tooLowBalance = false;
 
+    let accDictKey = getAccountDictKey(totalEntry.account);
+
     if (previousReadingFileData) {
-      if (
-        !previousReadingFileData.participants[totalEntry.account.toString()]
-      ) {
+      if (!previousReadingFileData.participants[accDictKey]) {
         console.log(
           "Total entry found but previous file doesnt contain participant. Hacking!"
         );
@@ -53,37 +57,31 @@ function processParticipantReading(
       }
 
       roeCurrent = league_helper.getRoe(
-        previousReadingFileData.participants[totalEntry.account.toString()]
-          .startingBalance,
+        previousReadingFileData.participants[accDictKey].startingBalance,
         totalEntry.marginBalance
       );
 
       startingBalance =
-        previousReadingFileData.participants[totalEntry.account.toString()]
-          .startingBalance;
+        previousReadingFileData.participants[accDictKey].startingBalance;
 
       tooLowBalance =
-        previousReadingFileData.participants[totalEntry.account.toString()]
-          .tooLowBalance === true || false;
+        previousReadingFileData.participants[accDictKey].tooLowBalance ===
+          true || false;
 
       isRekt =
-        previousReadingFileData.participants[totalEntry.account.toString()]
-          .isRekt === true || roeCurrent <= -99.0;
+        previousReadingFileData.participants[accDictKey].isRekt === true ||
+        roeCurrent <= -99.0;
 
       isRetarded =
-        previousReadingFileData.participants[totalEntry.account.toString()]
-          .isRetarded === true ||
+        previousReadingFileData.participants[accDictKey].isRetarded === true ||
         _checkIfRetarded(
-          previousReadingFileData.participants[totalEntry.account.toString()],
+          previousReadingFileData.participants[accDictKey],
           depositEntry,
           transferEntry
         );
 
-      nextRoes = previousReadingFileData.participants[
-        totalEntry.account.toString()
-      ].roes
-        ? previousReadingFileData.participants[totalEntry.account.toString()]
-            .roes
+      nextRoes = previousReadingFileData.participants[accDictKey].roes
+        ? previousReadingFileData.participants[accDictKey].roes
         : [];
       nextRoes.push(Math.round(roeCurrent * 1e2) / 1e2);
     } else {
@@ -92,7 +90,7 @@ function processParticipantReading(
       }
     }
 
-    readingData.participants[totalEntry.account.toString()] = {
+    readingData.participants[accDictKey] = {
       balance: totalEntry.marginBalance,
       account: totalEntry.account,
       deposit: depositEntry,
@@ -112,8 +110,9 @@ function processParticipantReading(
       roes: nextRoes
     };
   } else if (response.inner.status === 201) {
-    readingData.participants[response.inner.previousData.account.toString()] =
-      response.inner.previousData;
+    readingData.participants[
+      getAccountDictKey(response.inner.previousData.account)
+    ] = response.inner.previousData;
   } else {
     let { email, username } = response.participant;
     readingData.totallyEmptyAccounts.push({
