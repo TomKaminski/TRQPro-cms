@@ -39,6 +39,18 @@ async function validateApiKey(apiKey, apiSecret, leagueEndDate) {
   }
 }
 
+async function validateRefferal(apiKey, apiSecret) {
+  try {
+    let accInfo = _transformApiKeyResponse(
+      await _getApiKeyInfo(apiKey, apiSecret)
+    );
+
+    return accInfo;
+  } catch {
+    return false;
+  }
+}
+
 async function getUserReading(apiKey, apiSecret, symbols) {
   let accInfo = _transformApiKeyResponse(
     await _getApiKeyInfo(apiKey, apiSecret)
@@ -217,6 +229,7 @@ function _getCoinInUSDT(coinIndexPrice, amount) {
 
 module.exports = {
   getReadings,
+  validateRefferal,
   validateApiKey,
   _getApiKeyInfo
 };

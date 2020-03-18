@@ -294,7 +294,12 @@ async function validateApiKeyAndSecret(
 
 async function validateRefferal(participant) {
   const decryptedSecret = encrypt_decrypt.decrypt(participant.apiSecret);
-  return bitmex_service.validateRefferal(participant.apiKey, decryptedSecret);
+
+  if (participant.exchange === "bitmex") {
+    return bitmex_service.validateRefferal(participant.apiKey, decryptedSecret);
+  } else {
+    return bybit_service.validateRefferal(participant.apiKey, decryptedSecret);
+  }
 }
 
 function tryGetComingLeagueParticipantsCount() {
