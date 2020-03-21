@@ -98,7 +98,6 @@ function createLeagueFolderIfNotExists(leagueData) {
   const dir = createLeagueFolderPath(leagueData.leagueUniqueIdentifier);
 
   if (!fs.existsSync(dir)) {
-    console.log("Creating league folder:", dir);
     fs.mkdirSync(dir);
   }
 }

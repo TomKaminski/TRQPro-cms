@@ -112,7 +112,11 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
       if (value.exchange === "bitmex") {
         return bitmex_service.getParticipantCurrentWalletInfo(value, prevData);
       } else {
-        return bybit_service.getUserReading(value, prevData);
+        return bybit_service.getUserReading(
+          value,
+          prevData,
+          previousReadingFileData.readingDate
+        );
       }
     });
   } else {

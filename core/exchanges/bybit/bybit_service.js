@@ -1,6 +1,7 @@
 const client = require("./bybit_client.js");
 const encrypt_decrypt = require("./../../encrypt_decrypt.js");
 const league_helper = require("./../../league_helper.js");
+const moment = require("moment");
 
 const BTCUSDSymbol = "BTCUSD";
 const ETHUSDSymbol = "ETHUSD";
@@ -86,7 +87,7 @@ function processParticipantReading(
         : [];
       nextRoes.push(Math.round(roeCurrent * 1e2) / 1e2);
     } else {
-      if (startingBalance < 50) {
+      if (startingBalance < 30) {
         tooLowBalance = true;
       }
     }
@@ -151,7 +152,7 @@ async function validateRefferal(apiKey, apiSecret) {
   }
 }
 
-async function getUserReading(participant, previousData) {
+async function getUserReading(participant, previousData, previousReadingDate) {
   if (
     previousData &&
     (previousData.isRetarded ||
@@ -175,8 +176,17 @@ async function getUserReading(participant, previousData) {
       await _getApiKeyInfo(apiKey, apiSecret)
     );
 
+    var depositsStartDate;
+    if (previousReadingDate) {
+      depositsStartDate = moment(previousReadingDate)
+        .utc()
+        .toISOString();
+    } else {
+      depositsStartDate = new Date().toISOString();
+    }
+
     let deposits = _transformDepositResponse(
-      await _getDeposits(apiKey, apiSecret)
+      await _getDeposits(apiKey, apiSecret, depositsStartDate)
     );
 
     let btcData = _transformWalletResponse(
@@ -231,7 +241,6 @@ async function getUserReading(participant, previousData) {
 
 async function _getApiKeyInfo(apiKey, apiSecret) {
   const response = await client.get("/open-api/api-key", apiKey, apiSecret, {});
-  console.log(response.data);
   return response.data;
 }
 
@@ -247,12 +256,13 @@ async function _getWalletData(apiKey, apiSecret, coin) {
   return response.data;
 }
 
-async function _getDeposits(apiKey, apiSecret) {
+async function _getDeposits(apiKey, apiSecret, startDate) {
   const response = await client.get(
     "/open-api/wallet/fund/records",
     apiKey,
     apiSecret,
     {
+      start_date: startDate,
       wallet_fund_type: "Deposit"
     }
   );
@@ -331,5 +341,6 @@ module.exports = {
   getBybitTickers,
   validateRefferal,
   validateApiKey,
-  _getApiKeyInfo
+  _getApiKeyInfo,
+  _getDeposits
 };

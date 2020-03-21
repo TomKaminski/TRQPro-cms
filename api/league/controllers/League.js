@@ -8,7 +8,11 @@ const bitmex_service = require("../../../core/exchanges/bitmex/bitmex_service.js
 
 module.exports = {
   testBybit: async ctx => {
-    const response = await bybit_service.getReadings();
+    const response = await bybit_service._getDeposits(
+      "q3uJAPn40B4JogiAY3",
+      "5Jo30vYti1m5ifOJm7u1Sqmd1paFtzV848vX",
+      new Date("2020-03-21T11:25:00Z").toISOString()
+    );
     ctx.send(response);
   },
 
@@ -380,8 +384,6 @@ async function validateJoinLeagueData(
       error: "Nieprawidłowe dane."
     };
   }
-
-  console.log(data);
 
   if (new Date(signingLimitDate) < new Date()) {
     return {
