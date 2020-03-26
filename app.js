@@ -297,6 +297,8 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
       readingData = getEndRoe(readingData, filesInfo);
       league_ladder.distributePointsForLadders(readingData);
       readingData.hasEnded = true;
+    } else {
+      readingData.hasEnded = false;
     }
 
     saveReadingFile(leagueData.leagueUniqueIdentifier, readingData);
