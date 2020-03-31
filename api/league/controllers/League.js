@@ -1,12 +1,21 @@
 const fs = require("fs");
-const axios = require("axios");
 const moment = require("moment");
 
 const encrypt_decrypt = require("../../../core/encrypt_decrypt.js");
 const league_helper = require("../../../core/league_helper.js");
-const league_ladder = require("../../../core/league_ladder.js");
+const bybit_service = require("../../../core/exchanges/bybit/bybit_service.js");
+const bitmex_service = require("../../../core/exchanges/bitmex/bitmex_service.js");
 
 module.exports = {
+  testBybit: async ctx => {
+    const response = await bybit_service._getDeposits(
+      "q3uJAPn40B4JogiAY3",
+      "5Jo30vYti1m5ifOJm7u1Sqmd1paFtzV848vX",
+      new Date("2020-03-21T11:25:00Z").toISOString()
+    );
+    ctx.send(response);
+  },
+
   indexSmallData: async ctx => {
     let rawdata = fs.readFileSync(league_helper.leagueInputDataFile);
     let leagueData = JSON.parse(rawdata);
@@ -166,7 +175,8 @@ module.exports = {
             let validatedData = await validateJoinLeagueData(
               jsonBody,
               leagueData.participants,
-              leagueData.signingLimitDate
+              leagueData.signingLimitDate,
+              leagueData.endDate
             );
 
             validityResult = validatedData;
@@ -186,7 +196,8 @@ module.exports = {
                 username: jsonBody.nickname,
                 email: jsonBody.email,
                 apiKey: jsonBody.apiKey,
-                apiSecret: validityResult.hashedApiSecret
+                apiSecret: validityResult.hashedApiSecret,
+                exchange: jsonBody.exchange
               });
             }
           }
@@ -206,7 +217,8 @@ module.exports = {
       let validatedData = await validateJoinLeagueData(
         jsonBody,
         callForLeagueData.coming_leagues[jsonBody.league].participants,
-        callForLeagueData.coming_leagues[jsonBody.league].signingLimitDate
+        callForLeagueData.coming_leagues[jsonBody.league].signingLimitDate,
+        callForLeagueData.coming_leagues[jsonBody.league].endDate
       );
 
       if (validatedData.isValid) {
@@ -214,7 +226,8 @@ module.exports = {
           username: jsonBody.nickname,
           email: jsonBody.email,
           apiKey: jsonBody.apiKey,
-          apiSecret: validatedData.hashedApiSecret
+          apiSecret: validatedData.hashedApiSecret,
+          exchange: jsonBody.exchange
         });
 
         fs.writeFileSync(
@@ -269,70 +282,27 @@ module.exports = {
   }
 };
 
-async function validateApiKeyAndSecret(apiKey, apiSecret) {
-  var verb = "GET",
-    path = league_helper.wallerSummaryApiPath,
-    expires = Math.round(new Date().getTime() / 1000) + 60;
-
-  const signature = encrypt_decrypt.getBitmexSignature(
-    apiSecret,
-    verb,
-    path,
-    expires
-  );
-
-  const headers = league_helper.generateApiHeaders(expires, apiKey, signature);
-  const config = league_helper.generateRequestConfig(headers, path, verb);
-
-  try {
-    let res = await axios.request(config);
-    if (res.status === 200) {
-      return true;
-    } else {
-      return false;
-    }
-  } catch (error) {
-    return false;
+async function validateApiKeyAndSecret(
+  apiKey,
+  apiSecret,
+  exchange,
+  leagueEndDate
+) {
+  if (exchange == "bitmex") {
+    return await bitmex_service.validateApiKeyAndSecret(apiKey, apiSecret);
+  } else if (exchange == "bybit") {
+    return await bybit_service.validateApiKey(apiKey, apiSecret, leagueEndDate);
   }
+  return false;
 }
 
 async function validateRefferal(participant) {
-  var verb = "GET",
-    path = league_helper.affliateStatusApiPath,
-    expires = Math.round(new Date().getTime() / 1000) + 60;
+  const decryptedSecret = encrypt_decrypt.decrypt(participant.apiSecret);
 
-  const signature = encrypt_decrypt.getBitmexSignature(
-    encrypt_decrypt.decrypt(participant.apiSecret),
-    verb,
-    path,
-    expires
-  );
-
-  const headers = league_helper.generateApiHeaders(
-    expires,
-    participant.apiKey,
-    signature
-  );
-  const config = league_helper.generateRequestConfig(headers, path, verb);
-
-  try {
-    let res = await axios.request(config);
-    if (res.status === 200) {
-      return {
-        nick: participant.username,
-        refId: res.data.referrerAccount
-      };
-    } else {
-      return {
-        nick: participant.username,
-        refId: -1
-      };
-    }
-  } catch (error) {
-    return {
-      nick: participant.username,
-      refId: -1
-    };
+  if (participant.exchange === "bitmex") {
+    return bitmex_service.validateRefferal(participant.apiKey, decryptedSecret);
+  } else {
+    return bybit_service.validateRefferal(participant.apiKey, decryptedSecret);
   }
 }
 
@@ -396,12 +366,18 @@ function isNullOrEmpty(data) {
   return data === undefined || data === null || data === "";
 }
 
-async function validateJoinLeagueData(data, participants, signingLimitDate) {
+async function validateJoinLeagueData(
+  data,
+  participants,
+  signingLimitDate,
+  leagueEndDate
+) {
   if (
     isNullOrEmpty(data.apiSecret) ||
     isNullOrEmpty(data.apiKey) ||
     isNullOrEmpty(data.nickname) ||
-    isNullOrEmpty(data.email)
+    isNullOrEmpty(data.email) ||
+    isNullOrEmpty(data.exchange)
   ) {
     return {
       isValid: false,
@@ -416,7 +392,14 @@ async function validateJoinLeagueData(data, participants, signingLimitDate) {
     };
   }
 
-  if ((await validateApiKeyAndSecret(data.apiKey, data.apiSecret)) === false) {
+  if (
+    (await validateApiKeyAndSecret(
+      data.apiKey,
+      data.apiSecret,
+      data.exchange,
+      leagueEndDate
+    )) === false
+  ) {
     return {
       isValid: false,
       error: "Podane klucze API są nieprawidłowe."

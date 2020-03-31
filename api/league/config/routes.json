@@ -29,6 +29,11 @@
       "method": "GET",
       "path": "/league/getLadderForYear",
       "handler": "League.getLadderForYear"
+    },
+    {
+      "method": "GET",
+      "path": "/league/testBybit",
+      "handler": "League.testBybit"
     }
   ]
 }

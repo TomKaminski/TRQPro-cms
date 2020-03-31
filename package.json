@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "axios": "^0.19.2",
+    "bybit_api": "^1.0.0",
     "dotenv": "^8.2.0",
     "knex": "^0.20.10",
     "lodash": "^4.17.15",
