@@ -1,14 +1,14 @@
 const axios = require("axios");
 const league_helper = require("./league_helper_bybit.js");
 
-//const mainnetApiBaseUrl = "https://api.bybit.com";
-const testnetApiBaseUrl = "https://api-testnet.bybit.com";
+const mainnetApiBaseUrl = "https://api.bybit.com";
+//const testnetApiBaseUrl = "https://api-testnet.bybit.com";
 
 async function get(path, apiKey, apiSecret, params) {
   const timestamp = Date.now();
 
   return await axios.get(
-    testnetApiBaseUrl +
+    mainnetApiBaseUrl +
       _composeUrlPathWithSignature(
         path,
         { api_key: apiKey, timestamp, ...params },
@@ -19,7 +19,7 @@ async function get(path, apiKey, apiSecret, params) {
 
 async function publicGet(path, params) {
   return await axios.get(
-    testnetApiBaseUrl + (params ? _composeUrlPath(path, params) : path)
+    mainnetApiBaseUrl + (params ? _composeUrlPath(path, params) : path)
   );
 }
 
