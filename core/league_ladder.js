@@ -21,6 +21,14 @@ function getRoe(prev, current) {
   return roe;
 }
 
+function determineExchangeType(key) {
+  if (key.contains("bybit")) {
+    return "bybit";
+  } else if (key.contains("bitmex")) {
+    return "bitmex";
+  }
+}
+
 function distributePointsForLadders(data) {
   let dsqLiqParticipants = getDSQLIQParticipants(data);
   let best10Participants = getBest10Participants(data);
@@ -38,6 +46,7 @@ function distributePointsForLadders(data) {
       points: 0,
       startingBalanceSum: participant.startingBalance,
       endingBalanceSum: participant.balance,
+      exchange: determineExchangeType(key),
       leagues: 1,
       overallRoe: currentLeagueRoe,
       bestRoe: currentLeagueRoe
@@ -132,7 +141,7 @@ function processLadderData(
   for (let index = 0; index < baseData.length; index++) {
     const element = baseData[index];
     const indexInLadder = _.findIndex(ladderData.participants, function(o) {
-      return o.email == element.email || o.account == element.account;
+      return o.email == element.email; //|| o.account == element.account; Tutaj nie mozna sprawdzac po account, bo account moze się powielać na roznych gieldach ;)
     });
     if (indexInLadder == -1) {
       ladderData.participants.push({
@@ -140,17 +149,30 @@ function processLadderData(
         username: element.username,
         account: element.account,
         points: 0,
-        startingBalanceSum: element.startingBalanceSum,
-        endingBalanceSum: element.endingBalanceSum,
+        startingBalanceSumUSD:
+          element.exchange === "bitmex" ? 0 : element.startingBalanceSum,
+        endingBalanceSumUSD:
+          element.exchange === "bitmex" ? 0 : element.endingBalanceSum,
+        startingBalanceSum:
+          element.exchange === "bitmex" ? element.startingBalanceSum : 0,
+        endingBalanceSum:
+          element.exchange === "bitmex" ? element.endingBalanceSum : 0,
         leagues: 1,
         overallRoe: element.overallRoe,
         bestRoe: element.bestRoe
       });
     } else {
-      ladderData.participants[indexInLadder].startingBalanceSum +=
-        element.startingBalanceSum;
-      ladderData.participants[indexInLadder].endingBalanceSum +=
-        element.endingBalanceSum;
+      if (element.exchange === "bitmex") {
+        ladderData.participants[indexInLadder].startingBalanceSum +=
+          element.startingBalanceSum;
+        ladderData.participants[indexInLadder].endingBalanceSum +=
+          element.endingBalanceSum;
+      } else {
+        ladderData.participants[indexInLadder].startingBalanceSumUSD +=
+          element.startingBalanceSum;
+        ladderData.participants[indexInLadder].endingBalanceSumUSD +=
+          element.endingBalanceSum;
+      }
       ladderData.participants[indexInLadder].leagues += 1;
       ladderData.participants[indexInLadder].overallRoe = getRoe(
         ladderData.participants[indexInLadder].startingBalanceSum,
