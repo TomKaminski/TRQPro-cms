@@ -130,7 +130,7 @@ async function validateApiKey(apiKey, apiSecret, leagueEndDate) {
       await _getApiKeyInfo(apiKey, apiSecret)
     );
 
-    if (accInfo.expired_at > leagueEndDate) {
+    if (accInfo.expired_at > leagueEndDate && !accInfo.read_only) {
       return true;
     } else {
       return false;
@@ -140,12 +140,12 @@ async function validateApiKey(apiKey, apiSecret, leagueEndDate) {
   }
 }
 
-async function validateRefferal(apiKey, apiSecret) {
+async function validateRefferal(participant, apiSecret) {
   try {
     let accInfo = _transformApiKeyResponse(
-      await _getApiKeyInfo(apiKey, apiSecret)
+      await _getApiKeyInfo(participant.apiKey, apiSecret)
     );
-
+    accInfo.username = participant.username;
     return accInfo;
   } catch {
     return false;
@@ -307,10 +307,8 @@ function _transformApiKeyResponse(object) {
   let firstApiKey = object.result[0];
   return {
     user_id: firstApiKey.user_id,
-    note: firstApiKey.note,
     inviter_id: firstApiKey.inviter_id,
-    read_only: firstApiKey.read_only,
-    expired_at: firstApiKey.expired_at
+    read_only: firstApiKey.read_only
   };
 }
 

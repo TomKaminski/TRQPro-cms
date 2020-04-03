@@ -7,6 +7,8 @@ const league_helper = require("./../../league_helper.js");
 const walletSummaryApiPath = "/api/v1/user/walletSummary?currency=XBt";
 const affliateStatusApiPath = "/api/v1/user/affiliateStatus";
 
+const refAccId = 1130323;
+
 function getAccountDictKey(account) {
   return "bitmex_" + account.toString();
 }
@@ -164,16 +166,23 @@ async function getParticipantCurrentWalletInfo(participant, previousData) {
 
 async function validateApiKeyAndSecret(apiKey, apiSecret) {
   try {
-    const response = await client.get(walletSummaryApiPath, apiKey, apiSecret);
-    return response.status === 200;
+    const response = await client.get(affliateStatusApiPath, apiKey, apiSecret);
+    if (response.status === 200) {
+      return response.data.referrerAccount === refAccId;
+    }
+    return false;
   } catch (error) {
     return false;
   }
 }
 
-async function validateRefferal(apiKey, apiSecret) {
+async function validateRefferal(participant, apiSecret) {
   try {
-    const response = await client.get(affliateStatusApiPath, apiKey, apiSecret);
+    const response = await client.get(
+      affliateStatusApiPath,
+      participant.apiKey,
+      apiSecret
+    );
     if (response.status === 200) {
       return {
         nick: participant.username,

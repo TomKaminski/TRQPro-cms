@@ -58,10 +58,20 @@ module.exports = {
     let comingLeagues = callForLeagueData.coming_leagues;
 
     let key = Object.keys(comingLeagues)[0];
-    var actions = comingLeagues[key].participants.map(validateRefferal);
 
-    await Promise.all(actions).then(responses => {
-      ctx.send(responses);
+    var actionsBybit = comingLeagues[key].participants
+      .filter(item => item.exchange === "bybit")
+      .map(validateRefferal);
+    var actionsBitmex = comingLeagues[key].participants
+      .filter(item => item.exchange === "bitmex")
+      .map(validateRefferal);
+
+    let responsesBybit = await Promise.all(actionsBybit);
+    let responsesBitmex = await Promise.all(actionsBitmex);
+
+    ctx.send({
+      BYBIT_ACCOUNTS: responsesBybit,
+      BITMEX_ACCOUNTS: responsesBitmex
     });
   },
 
@@ -292,9 +302,9 @@ async function validateRefferal(participant) {
   const decryptedSecret = encrypt_decrypt.decrypt(participant.apiSecret);
 
   if (participant.exchange === "bitmex") {
-    return bitmex_service.validateRefferal(participant.apiKey, decryptedSecret);
+    return bitmex_service.validateRefferal(participant, decryptedSecret);
   } else {
-    return bybit_service.validateRefferal(participant.apiKey, decryptedSecret);
+    return bybit_service.validateRefferal(participant, decryptedSecret);
   }
 }
 
