@@ -22,9 +22,9 @@ function getRoe(prev, current) {
 }
 
 function determineExchangeType(key) {
-  if (key.contains("bybit")) {
+  if (key.includes("bybit")) {
     return "bybit";
-  } else if (key.contains("bitmex")) {
+  } else if (key.includes("bitmex")) {
     return "bitmex";
   }
 }
@@ -175,8 +175,10 @@ function processLadderData(
       }
       ladderData.participants[indexInLadder].leagues += 1;
       ladderData.participants[indexInLadder].overallRoe = getRoe(
-        ladderData.participants[indexInLadder].startingBalanceSum,
-        ladderData.participants[indexInLadder].endingBalanceSum
+        ladderData.participants[indexInLadder].startingBalanceSum +
+          ladderData.participants[indexInLadder].startingBalanceSumUSD,
+        ladderData.participants[indexInLadder].endingBalanceSum +
+          ladderData.participants[indexInLadder].endingBalanceSumUSD
       );
       if (ladderData.participants[indexInLadder].bestRoe < element.bestRoe) {
         ladderData.participants[indexInLadder].bestRoe = element.bestRoe;

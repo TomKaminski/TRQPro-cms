@@ -184,6 +184,8 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
           league_ladder.distributePointsForLadders(readingData);
         }
         readingData.hasEnded = true;
+      } else {
+        readingData.hasEnded = false;
       }
 
       league_helper.saveReadingFile(
