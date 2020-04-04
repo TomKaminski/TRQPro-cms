@@ -180,8 +180,12 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
 
       if (isLastReading) {
         readingData = league_helper.getEndRoe(readingData, filesInfo);
-        league_ladder.distributePointsForLadders(readingData);
+        if (leagueData.includeInRanking) {
+          league_ladder.distributePointsForLadders(readingData);
+        }
         readingData.hasEnded = true;
+      } else {
+        readingData.hasEnded = false;
       }
 
       league_helper.saveReadingFile(

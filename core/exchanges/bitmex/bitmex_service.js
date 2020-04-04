@@ -7,6 +7,8 @@ const league_helper = require("./../../league_helper.js");
 const walletSummaryApiPath = "/api/v1/user/walletSummary?currency=XBt";
 const affliateStatusApiPath = "/api/v1/user/affiliateStatus";
 
+const refAccId = 1130323;
+
 function getAccountDictKey(account) {
   return "bitmex_" + account.toString();
 }
@@ -27,7 +29,7 @@ function processParticipantReading(
       let { email, username } = response.participant;
       readingData.totallyEmptyAccounts.push({
         email,
-        username
+        username,
       });
       return;
     }
@@ -51,7 +53,7 @@ function processParticipantReading(
         let { email, username } = response.participant;
         readingData.totallyEmptyAccounts.push({
           email,
-          username
+          username,
         });
         return;
       }
@@ -107,7 +109,7 @@ function processParticipantReading(
       isRekt,
       isRetarded,
       tooLowBalance,
-      roes: nextRoes
+      roes: nextRoes,
     };
   } else if (response.inner.status === 201) {
     readingData.participants[
@@ -117,7 +119,7 @@ function processParticipantReading(
     let { email, username } = response.participant;
     readingData.totallyEmptyAccounts.push({
       email,
-      username
+      username,
     });
     return;
   }
@@ -133,9 +135,9 @@ async function getParticipantCurrentWalletInfo(participant, previousData) {
     return {
       inner: {
         status: 201,
-        previousData
+        previousData,
       },
-      participant
+      participant,
     };
   }
 
@@ -150,45 +152,67 @@ async function getParticipantCurrentWalletInfo(participant, previousData) {
 
     return {
       inner: response,
-      participant
+      participant,
     };
   } catch (error) {
     return {
       inner: {
-        status: 401
+        status: 401,
       },
-      participant
+      participant,
     };
   }
 }
 
 async function validateApiKeyAndSecret(apiKey, apiSecret) {
   try {
-    const response = await client.get(walletSummaryApiPath, apiKey, apiSecret);
-    return response.status === 200;
+    const response = await client.get(affliateStatusApiPath, apiKey, apiSecret);
+    if (response.status === 200) {
+      if (response.data.referrerAccount === refAccId) {
+        return {
+          isSuccess: true,
+          error: null,
+        };
+      }
+      return {
+        isSuccess: false,
+        error: "Konto nie jest podpięte pod odpowiedni reflink.",
+      };
+    }
+    return {
+      isSuccess: false,
+      error: "Podane klucze API są nieprawidłowe.",
+    };
   } catch (error) {
-    return false;
+    return {
+      isSuccess: false,
+      error: "Podane klucze API są nieprawidłowe.",
+    };
   }
 }
 
-async function validateRefferal(apiKey, apiSecret) {
+async function validateRefferal(participant, apiSecret) {
   try {
-    const response = await client.get(affliateStatusApiPath, apiKey, apiSecret);
+    const response = await client.get(
+      affliateStatusApiPath,
+      participant.apiKey,
+      apiSecret
+    );
     if (response.status === 200) {
       return {
         nick: participant.username,
-        refId: response.data.referrerAccount
+        refId: response.data.referrerAccount,
       };
     } else {
       return {
         nick: participant.username,
-        refId: -1
+        refId: -1,
       };
     }
   } catch (error) {
     return {
       nick: participant.username,
-      refId: -1
+      refId: -1,
     };
   }
 }
@@ -201,7 +225,7 @@ function _checkIfRetarded(previousEntry, depositEntry, transferEntry) {
 }
 
 function _filterElementByKey(response, key) {
-  return response.find(element => {
+  return response.find((element) => {
     return element.transactType === key;
   });
 }
@@ -210,5 +234,5 @@ module.exports = {
   processParticipantReading,
   validateApiKeyAndSecret,
   validateRefferal,
-  getParticipantCurrentWalletInfo
+  getParticipantCurrentWalletInfo,
 };

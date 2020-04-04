@@ -57,7 +57,7 @@ function processParticipantReading(
         let { email, username } = response.participant;
         readingData.totallyEmptyAccounts.push({
           email,
-          username
+          username,
         });
         return;
       }
@@ -108,7 +108,7 @@ function processParticipantReading(
       isRekt,
       isRetarded,
       tooLowBalance,
-      roes: nextRoes
+      roes: nextRoes,
     };
   } else if (response.inner.status === 201) {
     readingData.participants[
@@ -118,7 +118,7 @@ function processParticipantReading(
     let { email, username } = response.participant;
     readingData.totallyEmptyAccounts.push({
       email,
-      username
+      username,
     });
     return;
   }
@@ -130,22 +130,42 @@ async function validateApiKey(apiKey, apiSecret, leagueEndDate) {
       await _getApiKeyInfo(apiKey, apiSecret)
     );
 
-    if (accInfo.expired_at > leagueEndDate) {
-      return true;
+    let momentExpiredAt = moment(accInfo.expired_at);
+    let momentLeagueEndDate = moment(leagueEndDate);
+
+    if (momentExpiredAt > momentLeagueEndDate) {
+      if (accInfo.read_only) {
+        return {
+          isSuccess: true,
+          error: null,
+        };
+      }
+      return {
+        isSuccess: false,
+        error:
+          "Podany klucz API nie jest ustawiony jako tylko do odczytu (readonly).",
+      };
     } else {
-      return false;
+      return {
+        isSuccess: false,
+        error:
+          "Podany klucz API wygasa przed końcem ligi. Proszę wygenerować nowy klucz.",
+      };
     }
   } catch {
-    return false;
+    return {
+      isSuccess: false,
+      error: "Podane klucze API są nieprawidłowe.",
+    };
   }
 }
 
-async function validateRefferal(apiKey, apiSecret) {
+async function validateRefferal(participant, apiSecret) {
   try {
     let accInfo = _transformApiKeyResponse(
-      await _getApiKeyInfo(apiKey, apiSecret)
+      await _getApiKeyInfo(participant.apiKey, apiSecret)
     );
-
+    accInfo.username = participant.username;
     return accInfo;
   } catch {
     return false;
@@ -162,9 +182,9 @@ async function getUserReading(participant, previousData, previousReadingDate) {
     return {
       inner: {
         status: 201,
-        previousData
+        previousData,
       },
-      participant
+      participant,
     };
   }
 
@@ -178,9 +198,7 @@ async function getUserReading(participant, previousData, previousReadingDate) {
 
     var depositsStartDate;
     if (previousReadingDate) {
-      depositsStartDate = moment(previousReadingDate)
-        .utc()
-        .toISOString();
+      depositsStartDate = moment(previousReadingDate).utc().toISOString();
     } else {
       depositsStartDate = new Date().toISOString();
     }
@@ -224,17 +242,17 @@ async function getUserReading(participant, previousData, previousReadingDate) {
           XRP: xrpData,
           ETH: ethData,
           EOS: eosData,
-          USDT: usdtData
-        }
+          USDT: usdtData,
+        },
       },
-      participant
+      participant,
     };
   } catch (error) {
     return {
       inner: {
-        status: 401
+        status: 401,
       },
-      participant
+      participant,
     };
   }
 }
@@ -250,7 +268,7 @@ async function _getWalletData(apiKey, apiSecret, coin) {
     apiKey,
     apiSecret,
     {
-      coin
+      coin,
     }
   );
   return response.data;
@@ -263,7 +281,7 @@ async function _getDeposits(apiKey, apiSecret, startDate) {
     apiSecret,
     {
       start_date: startDate,
-      wallet_fund_type: "Deposit"
+      wallet_fund_type: "Deposit",
     }
   );
   return response.data;
@@ -276,7 +294,7 @@ async function getBybitTickers() {
 
 function _transformTickersResponse(array) {
   let symbols = {};
-  array.forEach(ticker => {
+  array.forEach((ticker) => {
     symbols[ticker.symbol] = ticker.index_price;
   });
   return symbols;
@@ -291,7 +309,7 @@ function _transformWalletResponse(object, coin) {
     order_margin: coinWalletData.order_margin,
     position_margin: coinWalletData.position_margin,
     wallet_balance: coinWalletData.wallet_balance,
-    unrealised_pnl: coinWalletData.unrealised_pnl
+    unrealised_pnl: coinWalletData.unrealised_pnl,
   };
 }
 
@@ -306,11 +324,10 @@ function _transformApiKeyResponse(object) {
 
   let firstApiKey = object.result[0];
   return {
+    expired_at: firstApiKey.expired_at,
     user_id: firstApiKey.user_id,
-    note: firstApiKey.note,
     inviter_id: firstApiKey.inviter_id,
     read_only: firstApiKey.read_only,
-    expired_at: firstApiKey.expired_at
   };
 }
 
@@ -342,5 +359,5 @@ module.exports = {
   validateRefferal,
   validateApiKey,
   _getApiKeyInfo,
-  _getDeposits
+  _getDeposits,
 };

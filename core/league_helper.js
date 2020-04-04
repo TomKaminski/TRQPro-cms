@@ -44,14 +44,34 @@ function createLeagueHistoryFolderPath() {
   return "./league_history";
 }
 
+function determineExchangeType(key) {
+  if (key.includes("bybit")) {
+    return "bybit";
+  } else if (key.includes("bitmex")) {
+    return "bitmex";
+  }
+}
+
 function getSortedParticipants(obj) {
+  var values = [];
+  for (var key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      let objToPush = obj[key];
+      objToPush.exchange = determineExchangeType(key);
+      values.push(objToPush);
+    }
+  }
+  return values.sort(compareRoes);
+}
+
+function getArray(obj) {
   var values = [];
   for (var key in obj) {
     if (obj.hasOwnProperty(key)) {
       values.push(obj[key]);
     }
   }
-  return values.sort(compareRoes);
+  return values;
 }
 
 function compareRoes(a, b) {
@@ -144,20 +164,25 @@ function getDayRoe(readingData, files, dayRoe, isEndRoe) {
     );
 
     let historicalData = JSON.parse(rawFiledata);
-    let participantsToCompute = _.filter(readingData.participants, item => {
-      return !item.isRekt && !item.isRetarded && !item.tooLowBalance;
-    });
+    let participantsToCompute = _.reduce(
+      readingData.participants,
+      (result, item, key) => {
+        if (!item.isRekt && !item.isRetarded && !item.tooLowBalance) {
+          result[key] = item;
+        }
+        return result;
+      }
+    );
 
     for (var key in participantsToCompute) {
-      let { account } = participantsToCompute[key];
       if (
-        readingData.participants.hasOwnProperty(account) &&
-        historicalData.participants.hasOwnProperty(account)
+        readingData.participants.hasOwnProperty(key) &&
+        historicalData.participants.hasOwnProperty(key)
       ) {
         let roePropName = isEndRoe ? "roeEnd" : "roe" + dayRoe + "d";
-        readingData.participants[account][roePropName] = getRoe(
-          historicalData.participants[account].balance,
-          readingData.participants[account].balance
+        readingData.participants[key][roePropName] = getRoe(
+          historicalData.participants[key].balance,
+          readingData.participants[key].balance
         );
       }
     }
@@ -209,6 +234,7 @@ module.exports = {
   createLeagueLadderFilePath,
   createLeagueHistoryFolderPath,
   getSortedParticipants,
+  getArray,
   compareRoes,
   createLeagueLadderFolderPath
 };
