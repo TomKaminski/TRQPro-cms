@@ -29,7 +29,7 @@ function processParticipantReading(
       let { email, username } = response.participant;
       readingData.totallyEmptyAccounts.push({
         email,
-        username
+        username,
       });
       return;
     }
@@ -53,7 +53,7 @@ function processParticipantReading(
         let { email, username } = response.participant;
         readingData.totallyEmptyAccounts.push({
           email,
-          username
+          username,
         });
         return;
       }
@@ -109,7 +109,7 @@ function processParticipantReading(
       isRekt,
       isRetarded,
       tooLowBalance,
-      roes: nextRoes
+      roes: nextRoes,
     };
   } else if (response.inner.status === 201) {
     readingData.participants[
@@ -119,7 +119,7 @@ function processParticipantReading(
     let { email, username } = response.participant;
     readingData.totallyEmptyAccounts.push({
       email,
-      username
+      username,
     });
     return;
   }
@@ -135,9 +135,9 @@ async function getParticipantCurrentWalletInfo(participant, previousData) {
     return {
       inner: {
         status: 201,
-        previousData
+        previousData,
       },
-      participant
+      participant,
     };
   }
 
@@ -152,14 +152,14 @@ async function getParticipantCurrentWalletInfo(participant, previousData) {
 
     return {
       inner: response,
-      participant
+      participant,
     };
   } catch (error) {
     return {
       inner: {
-        status: 401
+        status: 401,
       },
-      participant
+      participant,
     };
   }
 }
@@ -168,11 +168,26 @@ async function validateApiKeyAndSecret(apiKey, apiSecret) {
   try {
     const response = await client.get(affliateStatusApiPath, apiKey, apiSecret);
     if (response.status === 200) {
-      return response.data.referrerAccount === refAccId;
+      if (response.data.referrerAccount === refAccId) {
+        return {
+          isSuccess: true,
+          error: null,
+        };
+      }
+      return {
+        isSuccess: false,
+        error: "Konto nie jest podpięte pod odpowiedni reflink.",
+      };
     }
-    return false;
+    return {
+      isSuccess: false,
+      error: "Podane klucze API są nieprawidłowe.",
+    };
   } catch (error) {
-    return false;
+    return {
+      isSuccess: false,
+      error: "Podane klucze API są nieprawidłowe.",
+    };
   }
 }
 
@@ -186,18 +201,18 @@ async function validateRefferal(participant, apiSecret) {
     if (response.status === 200) {
       return {
         nick: participant.username,
-        refId: response.data.referrerAccount
+        refId: response.data.referrerAccount,
       };
     } else {
       return {
         nick: participant.username,
-        refId: -1
+        refId: -1,
       };
     }
   } catch (error) {
     return {
       nick: participant.username,
-      refId: -1
+      refId: -1,
     };
   }
 }
@@ -210,7 +225,7 @@ function _checkIfRetarded(previousEntry, depositEntry, transferEntry) {
 }
 
 function _filterElementByKey(response, key) {
-  return response.find(element => {
+  return response.find((element) => {
     return element.transactType === key;
   });
 }
@@ -219,5 +234,5 @@ module.exports = {
   processParticipantReading,
   validateApiKeyAndSecret,
   validateRefferal,
-  getParticipantCurrentWalletInfo
+  getParticipantCurrentWalletInfo,
 };
