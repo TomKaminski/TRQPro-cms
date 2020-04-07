@@ -373,5 +373,4 @@ module.exports = {
   validateApiKey,
   _getApiKeyInfo,
   _getDeposits,
-  testDeposits,
 };
