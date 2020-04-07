@@ -2,6 +2,7 @@ const client = require("./bybit_client.js");
 const encrypt_decrypt = require("./../../encrypt_decrypt.js");
 const league_helper = require("./../../league_helper.js");
 const moment = require("moment");
+const _ = require("lodash");
 
 const BTCUSDSymbol = "BTCUSD";
 const ETHUSDSymbol = "ETHUSD";
@@ -18,8 +19,20 @@ function getAccountDictKey(account) {
   return "bybit_" + account.toString();
 }
 
-function _checkIfRetarded(response) {
-  return response.inner.deposits.length != 0;
+function _checkIfRetarded(response, previousReadingDate) {
+  let momentDate = moment(previousReadingDate).utc();
+
+  if (response.inner.deposits.length == 0) {
+    return false;
+  } else {
+    let possibleDateIndex = _.findIndex(response.inner.deposits, function (
+      depo
+    ) {
+      let depoMoment = moment(depo.exec_time);
+      return depoMoment > momentDate;
+    });
+    return possibleDateIndex != -1;
+  }
 }
 
 function processParticipantReading(
@@ -80,7 +93,7 @@ function processParticipantReading(
 
       isRetarded =
         previousReadingFileData.participants[accDictKey].isRetarded === true ||
-        _checkIfRetarded(response);
+        _checkIfRetarded(response, previousReadingFileData.readingDate);
 
       nextRoes = previousReadingFileData.participants[accDictKey].roes
         ? previousReadingFileData.participants[accDictKey].roes
@@ -198,7 +211,7 @@ async function getUserReading(participant, previousData, previousReadingDate) {
 
     var depositsStartDate;
     if (previousReadingDate) {
-      depositsStartDate = moment(previousReadingDate).utc().toISOString();
+      depositsStartDate = moment(previousReadingDate).toISOString();
     } else {
       depositsStartDate = new Date().toISOString();
     }
@@ -360,4 +373,5 @@ module.exports = {
   validateApiKey,
   _getApiKeyInfo,
   _getDeposits,
+  testDeposits,
 };
