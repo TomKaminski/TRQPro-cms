@@ -13,7 +13,7 @@ const bybit_service = require("./core/exchanges/bybit/bybit_service.js");
 const dotenv = require("dotenv");
 const strapi = require("strapi");
 
-moment.fn.toJSON = function() {
+moment.fn.toJSON = function () {
   return this.format();
 };
 
@@ -24,7 +24,7 @@ let md5Previous = null;
 let fsWait = false;
 let job = setupJob();
 
-Object.findOne = function(obj, predicate) {
+Object.findOne = function (obj, predicate) {
   for (var key in obj) {
     if (obj.hasOwnProperty(key) && predicate(obj[key])) {
       return obj[key];
@@ -69,7 +69,7 @@ function setupJob() {
 
     if (files.length === 0) {
       console.log("Scheduling first reading for", leagueData.startDate);
-      let job = schedule.scheduleJob(leagueData.startDate, function() {
+      let job = schedule.scheduleJob(leagueData.startDate, function () {
         createReadingFile(leagueData);
       });
       return job;
@@ -91,7 +91,7 @@ function setupJob() {
         );
         let job = schedule.scheduleJob(
           lastReadingData.nextReadingDate,
-          function() {
+          function () {
             createReadingFile(leagueData, lastReadingData, files);
           }
         );
@@ -104,10 +104,10 @@ function setupJob() {
 function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
   var actions = [];
   if (previousReadingFileData) {
-    actions = leagueData.participants.map(value => {
+    actions = leagueData.participants.map((value) => {
       let prevData = Object.findOne(
         previousReadingFileData.participants,
-        participantData => participantData.email === value.email
+        (participantData) => participantData.email === value.email
       );
       if (value.exchange === "bitmex") {
         return bitmex_service.getParticipantCurrentWalletInfo(value, prevData);
@@ -120,7 +120,7 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
       }
     });
   } else {
-    actions = leagueData.participants.map(participant => {
+    actions = leagueData.participants.map((participant) => {
       if (participant.exchange === "bitmex") {
         return bitmex_service.getParticipantCurrentWalletInfo(participant);
       } else {
@@ -150,13 +150,13 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
     endDate: leagueData.endDate,
     nextReadingDate: nextReadingDate,
     participants: {},
-    totallyEmptyAccounts: []
+    totallyEmptyAccounts: [],
   };
 
   //todo: better handle dis tickers :)
-  bybit_service.getBybitTickers().then(symbols => {
-    Promise.all(actions).then(responses => {
-      responses.forEach(response => {
+  bybit_service.getBybitTickers().then((symbols) => {
+    Promise.all(actions).then((responses) => {
+      responses.forEach((response) => {
         if (response.participant.exchange === "bitmex") {
           bitmex_service.processParticipantReading(
             response,

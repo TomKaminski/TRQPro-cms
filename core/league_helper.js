@@ -164,14 +164,9 @@ function getDayRoe(readingData, files, dayRoe, isEndRoe) {
     );
 
     let historicalData = JSON.parse(rawFiledata);
-    let participantsToCompute = _.reduce(
+    let participantsToCompute = _.omitBy(
       readingData.participants,
-      (result, item, key) => {
-        if (!item.isRekt && !item.isRetarded && !item.tooLowBalance) {
-          result[key] = item;
-        }
-        return result;
-      }
+      (o) => o.isRekt || o.isRetarded || o.tooLowBalance
     );
 
     for (var key in participantsToCompute) {
@@ -236,5 +231,5 @@ module.exports = {
   getSortedParticipants,
   getArray,
   compareRoes,
-  createLeagueLadderFolderPath
+  createLeagueLadderFolderPath,
 };
