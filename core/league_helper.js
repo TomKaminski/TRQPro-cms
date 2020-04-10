@@ -1,6 +1,4 @@
-const wallerSummaryApiPath = "/api/v1/user/walletSummary?currency=XBt";
-const walletApiPath = "/api/v1/user/wallet?currency=XBt";
-const affliateStatusApiPath = "/api/v1/user/affiliateStatus";
+const _ = require("lodash");
 
 const leagueInputDataFile = "./league_data/input.json";
 const callForLeagueDataFile = "./league_data/call_for_league.json";
@@ -46,34 +44,34 @@ function createLeagueHistoryFolderPath() {
   return "./league_history";
 }
 
-function generateApiHeaders(expires, apiKey, signature) {
-  return {
-    "content-type": "application/json",
-    Accept: "application/json",
-    "X-Requested-With": "XMLHttpRequest",
-    "api-expires": expires,
-    "api-key": apiKey,
-    "api-signature": signature
-  };
-}
-
-function generateRequestConfig(headers, path, verb) {
-  return {
-    headers: headers,
-    baseURL: "https://www.bitmex.com",
-    url: path,
-    method: verb
-  };
+function determineExchangeType(key) {
+  if (key.includes("bybit")) {
+    return "bybit";
+  } else if (key.includes("bitmex")) {
+    return "bitmex";
+  }
 }
 
 function getSortedParticipants(obj) {
   var values = [];
   for (var key in obj) {
     if (obj.hasOwnProperty(key)) {
-      values.push(obj[key]);
+      let objToPush = obj[key];
+      objToPush.exchange = determineExchangeType(key);
+      values.push(objToPush);
     }
   }
   return values.sort(compareRoes);
+}
+
+function getArray(obj) {
+  var values = [];
+  for (var key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      values.push(obj[key]);
+    }
+  }
+  return values;
 }
 
 function compareRoes(a, b) {
@@ -116,20 +114,122 @@ function compareRoes(a, b) {
   return b.roeCurrent - a.roeCurrent;
 }
 
+function createLeagueFolderIfNotExists(leagueData) {
+  const dir = createLeagueFolderPath(leagueData.leagueUniqueIdentifier);
+
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir);
+  }
+}
+
+function getReadingFiles(leagueUniqueIdentifier) {
+  const dir = createLeagueFolderPath(leagueUniqueIdentifier);
+  var files = fs.readdirSync(dir);
+  return files;
+}
+
+function saveReadingFile(leagueUniqueIdentifier, readingData) {
+  var fileName = createReadingFileName(new Date(readingData.readingDate));
+  fs.writeFileSync(
+    createLeagueFilePath(leagueUniqueIdentifier, fileName, true),
+    JSON.stringify(readingData)
+  );
+}
+
+function createReadingFileName(date) {
+  var datestring =
+    date.getFullYear() +
+    "_" +
+    ("0" + (date.getMonth() + 1)).slice(-2) +
+    "_" +
+    ("0" + date.getDate()).slice(-2) +
+    "_" +
+    ("0" + date.getHours()).slice(-2) +
+    "_" +
+    ("0" + date.getMinutes()).slice(-2);
+  return "reading_" + datestring;
+}
+
+function getDayRoe(readingData, files, dayRoe, isEndRoe) {
+  if (files && files.length > dayRoe - 1) {
+    let index = isEndRoe ? 0 : files.length - dayRoe;
+    let historicalFileName = files[index];
+
+    let rawFiledata = fs.readFileSync(
+      createLeagueFilePath(
+        readingData.leagueUniqueIdentifier,
+        historicalFileName,
+        false
+      )
+    );
+
+    let historicalData = JSON.parse(rawFiledata);
+    let participantsToCompute = _.omitBy(
+      readingData.participants,
+      (o) => o.isRekt || o.isRetarded || o.tooLowBalance
+    );
+
+    for (var key in participantsToCompute) {
+      if (
+        readingData.participants.hasOwnProperty(key) &&
+        historicalData.participants.hasOwnProperty(key)
+      ) {
+        let roePropName = isEndRoe ? "roeEnd" : "roe" + dayRoe + "d";
+        readingData.participants[key][roePropName] = getRoe(
+          historicalData.participants[key].balance,
+          readingData.participants[key].balance
+        );
+      }
+    }
+  }
+
+  return readingData;
+}
+
+function get1dRoe(readingData, files) {
+  return getDayRoe(readingData, files, 1, false);
+}
+
+function get3dRoe(readingData, files) {
+  return getDayRoe(readingData, files, 3, false);
+}
+
+function get7dRoe(readingData, files) {
+  return getDayRoe(readingData, files, 7, false);
+}
+
+function get14dRoe(readingData, files) {
+  return getDayRoe(readingData, files, 14, false);
+}
+
+function getEndRoe(readingData, files) {
+  return getDayRoe(readingData, files, null, true);
+}
+
+function getRoe(prev, current) {
+  let roe = (current / prev) * 100 - 100;
+  return roe;
+}
+
 module.exports = {
-  affliateStatusApiPath,
+  getRoe,
+  getEndRoe,
+  get14dRoe,
+  get7dRoe,
+  get3dRoe,
+  get1dRoe,
+  saveReadingFile,
+  getReadingFiles,
+  createLeagueFolderIfNotExists,
   createLeagueFilePath,
   createLeagueFolderPath,
-  generateApiHeaders,
-  generateRequestConfig,
-  wallerSummaryApiPath,
   leagueInputDataFile,
   callForLeagueDataFile,
   getCurrentQuarter,
   createLeagueLadderFilePath,
-  walletApiPath,
   createLeagueHistoryFolderPath,
   getSortedParticipants,
+  getArray,
   compareRoes,
-  createLeagueLadderFolderPath
+  createLeagueLadderFolderPath,
 };

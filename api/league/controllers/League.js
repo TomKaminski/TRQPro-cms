@@ -1,34 +1,13 @@
 const fs = require("fs");
-const axios = require("axios");
 const moment = require("moment");
 
 const encrypt_decrypt = require("../../../core/encrypt_decrypt.js");
 const league_helper = require("../../../core/league_helper.js");
-const league_ladder = require("../../../core/league_ladder.js");
-
-const Binance = require("node-binance-api");
-const binance = new Binance().options({
-  APIKEY: "6YXBn9qJM7HFxNKlBYMQ9IrmdYRyNHeXM8cPz33N3MepGqHTd15jdQOb98EFmD8q",
-  APISECRET: "wlWKNdm5H7xAbo6BflWlmWzcUs3GSxPmjXHImkjIpNyFISsmHzZdDReF0F4vuR1h"
-});
+const bybit_service = require("../../../core/exchanges/bybit/bybit_service.js");
+const bitmex_service = require("../../../core/exchanges/bitmex/bitmex_service.js");
 
 module.exports = {
-  binanceTest: async ctx => {
-    // // Current futures positions
-    // console.info(await binance.futuresAccount());
-
-    // // Futures balances
-    // console.info(await binance.futuresBalance());
-
-    binance.account((error, acc) => {
-      if (error) return console.error(error);
-      console.info("acc", acc);
-    });
-
-    ctx.send("DONE");
-  },
-
-  indexSmallData: async ctx => {
+  indexSmallData: async (ctx) => {
     let rawdata = fs.readFileSync(league_helper.leagueInputDataFile);
     let leagueData = JSON.parse(rawdata);
     let files = getReadingFiles(leagueData.leagueUniqueIdentifier);
@@ -39,7 +18,7 @@ module.exports = {
     if (files.length === 0 || endDate.diff(now, "days") <= -3) {
       ctx.send({
         isLeagueData: false,
-        participantsCount: tryGetComingLeagueParticipantsCount()
+        participantsCount: tryGetComingLeagueParticipantsCount(),
       });
     } else {
       let lastFileName = files[files.length - 1];
@@ -55,60 +34,70 @@ module.exports = {
       let participantsArray = league_helper.getSortedParticipants(
         lastReadingData.participants
       );
-      let smallArray = participantsArray.slice(0, 5).map(participant => {
+      let smallArray = participantsArray.slice(0, 5).map((participant) => {
         return {
           name: participant.username,
           roe: participant.roeCurrent,
           tooLowBalance: participant.tooLowBalance,
           isRekt: participant.isRekt,
-          isRetarded: participant.isRetarded
+          isRetarded: participant.isRetarded,
         };
       });
 
       ctx.send({
         isLeagueData: true,
         participants: smallArray,
-        hasEnded: lastReadingData.hasEnded
+        hasEnded: lastReadingData.hasEnded,
       });
     }
   },
 
-  checkRefferalsForNearestComingLeague: async ctx => {
+  checkRefferalsForNearestComingLeague: async (ctx) => {
     let rawdata = fs.readFileSync(league_helper.callForLeagueDataFile);
     let callForLeagueData = JSON.parse(rawdata);
     let comingLeagues = callForLeagueData.coming_leagues;
 
     let key = Object.keys(comingLeagues)[0];
-    var actions = comingLeagues[key].participants.map(validateRefferal);
 
-    await Promise.all(actions).then(responses => {
-      ctx.send(responses);
+    var actionsBybit = comingLeagues[key].participants
+      .filter((item) => item.exchange === "bybit")
+      .map(validateRefferal);
+    var actionsBitmex = comingLeagues[key].participants
+      .filter((item) => item.exchange === "bitmex")
+      .map(validateRefferal);
+
+    let responsesBybit = await Promise.all(actionsBybit);
+    let responsesBitmex = await Promise.all(actionsBitmex);
+
+    ctx.send({
+      BYBIT_ACCOUNTS: responsesBybit,
+      BITMEX_ACCOUNTS: responsesBitmex,
     });
   },
 
-  comingLeagues: async ctx => {
+  comingLeagues: async (ctx) => {
     if (!fs.existsSync(league_helper.callForLeagueDataFile)) {
       fs.writeFileSync(
         league_helper.callForLeagueDataFile,
         JSON.stringify({
-          coming_leagues: []
+          coming_leagues: [],
         })
       );
     }
 
     let rawdata = fs.readFileSync(league_helper.callForLeagueDataFile);
     let json = JSON.parse(rawdata);
-    let jsonArray = league_helper.getSortedParticipants(json.coming_leagues);
+    let jsonArray = league_helper.getArray(json.coming_leagues);
     let result = [];
 
-    jsonArray.forEach(league => {
+    jsonArray.forEach((league) => {
       delete league.participants;
       result.push(league);
     });
     ctx.send(result);
   },
 
-  getLadderForYear: async ctx => {
+  getLadderForYear: async (ctx) => {
     let year = getParam(ctx.request.url, "year");
     let leagueLadderFolderPath = league_helper.createLeagueLadderFolderPath(
       year
@@ -126,7 +115,7 @@ module.exports = {
       return;
     } else {
       var ladderArray = [];
-      files.forEach(fileName => {
+      files.forEach((fileName) => {
         let rawFiledata = fs.readFileSync(
           leagueLadderFolderPath + "/" + fileName
         );
@@ -134,7 +123,7 @@ module.exports = {
 
         let resultParticipants = [];
 
-        ladderData.participants.forEach(participant => {
+        ladderData.participants.forEach((participant) => {
           delete participant.email;
           resultParticipants.push(participant);
         });
@@ -147,12 +136,12 @@ module.exports = {
     }
   },
 
-  joinLeague: async ctx => {
+  joinLeague: async (ctx) => {
     if (!fs.existsSync(league_helper.callForLeagueDataFile)) {
       fs.writeFileSync(
         league_helper.callForLeagueDataFile,
         JSON.stringify({
-          coming_leagues: []
+          coming_leagues: [],
         })
       );
     }
@@ -170,7 +159,7 @@ module.exports = {
     ) {
       ctx.send({
         isValid: false,
-        error: "Zły identyfikator ligi."
+        error: "Zły identyfikator ligi.",
       });
       return;
     }
@@ -187,7 +176,8 @@ module.exports = {
             let validatedData = await validateJoinLeagueData(
               jsonBody,
               leagueData.participants,
-              leagueData.signingLimitDate
+              leagueData.signingLimitDate,
+              leagueData.endDate
             );
 
             validityResult = validatedData;
@@ -207,7 +197,8 @@ module.exports = {
                 username: jsonBody.nickname,
                 email: jsonBody.email,
                 apiKey: jsonBody.apiKey,
-                apiSecret: validityResult.hashedApiSecret
+                apiSecret: validityResult.hashedApiSecret,
+                exchange: jsonBody.exchange,
               });
             }
           }
@@ -220,14 +211,15 @@ module.exports = {
       }
       ctx.send({
         isValid: validityResult.isValid,
-        error: validityResult.error
+        error: validityResult.error,
       });
       return;
     } else {
       let validatedData = await validateJoinLeagueData(
         jsonBody,
         callForLeagueData.coming_leagues[jsonBody.league].participants,
-        callForLeagueData.coming_leagues[jsonBody.league].signingLimitDate
+        callForLeagueData.coming_leagues[jsonBody.league].signingLimitDate,
+        callForLeagueData.coming_leagues[jsonBody.league].endDate
       );
 
       if (validatedData.isValid) {
@@ -235,7 +227,8 @@ module.exports = {
           username: jsonBody.nickname,
           email: jsonBody.email,
           apiKey: jsonBody.apiKey,
-          apiSecret: validatedData.hashedApiSecret
+          apiSecret: validatedData.hashedApiSecret,
+          exchange: jsonBody.exchange,
         });
 
         fs.writeFileSync(
@@ -246,12 +239,12 @@ module.exports = {
 
       ctx.send({
         isValid: validatedData.isValid,
-        error: validatedData.error
+        error: validatedData.error,
       });
     }
   },
 
-  index: async ctx => {
+  index: async (ctx) => {
     let rawdata = fs.readFileSync(league_helper.leagueInputDataFile);
     let leagueData = JSON.parse(rawdata);
     let files = getReadingFiles(leagueData.leagueUniqueIdentifier);
@@ -272,12 +265,13 @@ module.exports = {
       );
       let lastReadingData = JSON.parse(rawFiledata);
 
+      console.log(lastReadingData.participants);
       let participantsArray = league_helper.getSortedParticipants(
         lastReadingData.participants
       );
 
       var participantsResult = [];
-      participantsArray.forEach(participant => {
+      participantsArray.forEach((participant) => {
         delete participant.email;
 
         participantsResult.push(participant);
@@ -287,73 +281,33 @@ module.exports = {
 
       ctx.send(lastReadingData);
     }
-  }
+  },
 };
 
-async function validateApiKeyAndSecret(apiKey, apiSecret) {
-  var verb = "GET",
-    path = league_helper.wallerSummaryApiPath,
-    expires = Math.round(new Date().getTime() / 1000) + 60;
-
-  const signature = encrypt_decrypt.getBitmexSignature(
-    apiSecret,
-    verb,
-    path,
-    expires
-  );
-
-  const headers = league_helper.generateApiHeaders(expires, apiKey, signature);
-  const config = league_helper.generateRequestConfig(headers, path, verb);
-
-  try {
-    let res = await axios.request(config);
-    if (res.status === 200) {
-      return true;
-    } else {
-      return false;
-    }
-  } catch (error) {
-    return false;
+async function validateApiKeyAndSecret(
+  apiKey,
+  apiSecret,
+  exchange,
+  leagueEndDate
+) {
+  if (exchange == "bitmex") {
+    return await bitmex_service.validateApiKeyAndSecret(apiKey, apiSecret);
+  } else if (exchange == "bybit") {
+    return await bybit_service.validateApiKey(apiKey, apiSecret, leagueEndDate);
   }
+  return {
+    isSuccess: false,
+    error: "Podane klucze API są nieprawidłowe.",
+  };
 }
 
 async function validateRefferal(participant) {
-  var verb = "GET",
-    path = league_helper.affliateStatusApiPath,
-    expires = Math.round(new Date().getTime() / 1000) + 60;
+  const decryptedSecret = encrypt_decrypt.decrypt(participant.apiSecret);
 
-  const signature = encrypt_decrypt.getBitmexSignature(
-    encrypt_decrypt.decrypt(participant.apiSecret),
-    verb,
-    path,
-    expires
-  );
-
-  const headers = league_helper.generateApiHeaders(
-    expires,
-    participant.apiKey,
-    signature
-  );
-  const config = league_helper.generateRequestConfig(headers, path, verb);
-
-  try {
-    let res = await axios.request(config);
-    if (res.status === 200) {
-      return {
-        nick: participant.username,
-        refId: res.data.referrerAccount
-      };
-    } else {
-      return {
-        nick: participant.username,
-        refId: -1
-      };
-    }
-  } catch (error) {
-    return {
-      nick: participant.username,
-      refId: -1
-    };
+  if (participant.exchange === "bitmex") {
+    return bitmex_service.validateRefferal(participant, decryptedSecret);
+  } else {
+    return bybit_service.validateRefferal(participant, decryptedSecret);
   }
 }
 
@@ -383,11 +337,11 @@ function tryGetNearestComingLeague() {
         startDate,
         endDate,
         signingLimitDate,
-        participants
+        participants,
       } = comingLeagues[key];
       let participantsResult = [];
 
-      participants.forEach(participant => {
+      participants.forEach((participant) => {
         delete participant.apiKey;
         delete participant.apiSecret;
 
@@ -401,7 +355,7 @@ function tryGetNearestComingLeague() {
         name,
         startDate,
         endDate,
-        signingLimitDate
+        signingLimitDate,
       };
       return result;
     }
@@ -417,37 +371,49 @@ function isNullOrEmpty(data) {
   return data === undefined || data === null || data === "";
 }
 
-async function validateJoinLeagueData(data, participants, signingLimitDate) {
+async function validateJoinLeagueData(
+  data,
+  participants,
+  signingLimitDate,
+  leagueEndDate
+) {
   if (
     isNullOrEmpty(data.apiSecret) ||
     isNullOrEmpty(data.apiKey) ||
     isNullOrEmpty(data.nickname) ||
-    isNullOrEmpty(data.email)
+    isNullOrEmpty(data.email) ||
+    isNullOrEmpty(data.exchange)
   ) {
     return {
       isValid: false,
-      error: "Nieprawidłowe dane."
+      error: "Nieprawidłowe dane.",
     };
   }
 
   if (new Date(signingLimitDate) < new Date()) {
     return {
       isValid: false,
-      error: "Zapisy na wybraną ligę są zakończone."
+      error: "Zapisy na wybraną ligę są zakończone.",
     };
   }
 
-  if ((await validateApiKeyAndSecret(data.apiKey, data.apiSecret)) === false) {
+  let validationResult = await validateApiKeyAndSecret(
+    data.apiKey,
+    data.apiSecret,
+    data.exchange,
+    leagueEndDate
+  );
+
+  if (!validationResult.isSuccess) {
     return {
       isValid: false,
-      error: "Podane klucze API są nieprawidłowe."
+      error: validationResult.error,
     };
   }
 
   let hashedApiSecret = hashSecret(data.apiSecret);
-
   if (
-    participants.find(item => {
+    participants.find((item) => {
       return (
         item.apiKey === data.apiKey ||
         item.hashedApiSecret === hashedApiSecret ||
@@ -458,14 +424,14 @@ async function validateJoinLeagueData(data, participants, signingLimitDate) {
   ) {
     return {
       isValid: false,
-      error: "Niektóre dane powielają się z już zapisanym uczestnikiem."
+      error: "Niektóre dane powielają się z już zapisanym uczestnikiem.",
     };
   }
 
   return {
     isValid: true,
     hashedApiSecret: hashedApiSecret,
-    error: null
+    error: null,
   };
 }
 

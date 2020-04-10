@@ -21,8 +21,8 @@
       "type": "string"
     },
     "articles": {
-      "collection": "article",
-      "via": "tags"
+      "via": "tags",
+      "collection": "article"
     }
   }
 }
