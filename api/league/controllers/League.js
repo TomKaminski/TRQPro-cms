@@ -5,8 +5,19 @@ const encrypt_decrypt = require("../../../core/encrypt_decrypt.js");
 const league_helper = require("../../../core/league_helper.js");
 const bybit_service = require("../../../core/exchanges/bybit/bybit_service.js");
 const bitmex_service = require("../../../core/exchanges/bitmex/bitmex_service.js");
+const binance_service = require("../../../core/exchanges/binance/binance_service.js");
 
 module.exports = {
+  testBinance: async (ctx) => {
+    ctx.send(
+      await binance_service.getUserReading(
+        { name: "Tomfly" },
+        null,
+        1586182500000
+      )
+    );
+  },
+
   indexSmallData: async (ctx) => {
     let rawdata = fs.readFileSync(league_helper.leagueInputDataFile);
     let leagueData = JSON.parse(rawdata);
@@ -294,6 +305,8 @@ async function validateApiKeyAndSecret(
     return await bitmex_service.validateApiKeyAndSecret(apiKey, apiSecret);
   } else if (exchange == "bybit") {
     return await bybit_service.validateApiKey(apiKey, apiSecret, leagueEndDate);
+  } else if (exchange == "binance") {
+    return await binance_service.validateApiKey(apiKey, apiSecret);
   }
   return {
     isSuccess: false,

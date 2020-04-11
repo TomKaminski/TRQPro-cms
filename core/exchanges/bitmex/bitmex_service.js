@@ -9,8 +9,8 @@ const affliateStatusApiPath = "/api/v1/user/affiliateStatus";
 
 const refAccId = 1130323;
 
-function getAccountDictKey(account) {
-  return "bitmex_" + account.toString();
+function getAccountDictKey(email) {
+  return "bitmex_" + email;
 }
 
 function processParticipantReading(
@@ -41,7 +41,7 @@ function processParticipantReading(
     var nextRoes = [0];
     var tooLowBalance = false;
 
-    let accDictKey = getAccountDictKey(totalEntry.account);
+    let accDictKey = getAccountDictKey(response.participant.email);
 
     if (previousReadingFileData) {
       if (!previousReadingFileData.participants[accDictKey]) {
@@ -94,7 +94,6 @@ function processParticipantReading(
 
     readingData.participants[accDictKey] = {
       balance: totalEntry.marginBalance,
-      account: totalEntry.account,
       deposit: depositEntry,
       transfer: transferEntry,
       username: response.participant.username,
@@ -112,9 +111,8 @@ function processParticipantReading(
       roes: nextRoes,
     };
   } else if (response.inner.status === 201) {
-    readingData.participants[
-      getAccountDictKey(response.inner.previousData.account)
-    ] = response.inner.previousData;
+    readingData.participants[getAccountDictKey(response.participant.email)] =
+      response.inner.previousData;
   } else {
     let { email, username } = response.participant;
     readingData.totallyEmptyAccounts.push({

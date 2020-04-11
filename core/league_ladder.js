@@ -13,7 +13,7 @@ let leagueLadderPoints = {
   "8": 4,
   "9": 2,
   "10": 1,
-  LIQDSQ: -10
+  LIQDSQ: -10,
 };
 
 function getRoe(prev, current) {
@@ -33,7 +33,7 @@ function distributePointsForLadders(data) {
   let dsqLiqParticipants = getDSQLIQParticipants(data);
   let best10Participants = getBest10Participants(data);
 
-  let baseData = Object.keys(data.participants).map(function(key) {
+  let baseData = Object.keys(data.participants).map(function (key) {
     let participant = data.participants[key];
     let currentLeagueRoe = getRoe(
       participant.startingBalance,
@@ -42,14 +42,13 @@ function distributePointsForLadders(data) {
     return {
       email: participant.email,
       username: participant.username,
-      account: participant.account,
       points: 0,
       startingBalanceSum: participant.startingBalance,
       endingBalanceSum: participant.balance,
       exchange: determineExchangeType(key),
       leagues: 1,
       overallRoe: currentLeagueRoe,
-      bestRoe: currentLeagueRoe
+      bestRoe: currentLeagueRoe,
     };
   });
 
@@ -81,7 +80,7 @@ function distributePointsForYearLadder(
       JSON.stringify({
         participants: [],
         ladder_unique_identifier: "ladder_" + fullYear,
-        ladder_public_name: "Ranking roczny " + fullYear
+        ladder_public_name: "Ranking roczny " + fullYear,
       })
     );
   }
@@ -114,7 +113,7 @@ function distributePointsForQuarterLadder(
       JSON.stringify({
         participants: [],
         ladder_unique_identifier: "ladder_" + fullYear + "_0" + quarter,
-        ladder_public_name: "Ranking kwartalny " + quarter + "/" + fullYear
+        ladder_public_name: "Ranking kwartalny " + quarter + "/" + fullYear,
       })
     );
   }
@@ -140,14 +139,13 @@ function processLadderData(
 ) {
   for (let index = 0; index < baseData.length; index++) {
     const element = baseData[index];
-    const indexInLadder = _.findIndex(ladderData.participants, function(o) {
-      return o.email == element.email; //|| o.account == element.account; Tutaj nie mozna sprawdzac po account, bo account moze się powielać na roznych gieldach ;)
+    const indexInLadder = _.findIndex(ladderData.participants, function (o) {
+      return o.email == element.email;
     });
     if (indexInLadder == -1) {
       ladderData.participants.push({
         email: element.email,
         username: element.username,
-        account: element.account,
         points: 0,
         startingBalanceSumUSD:
           element.exchange === "bitmex" ? 0 : element.startingBalanceSum,
@@ -159,7 +157,7 @@ function processLadderData(
           element.exchange === "bitmex" ? element.endingBalanceSum : 0,
         leagues: 1,
         overallRoe: element.overallRoe,
-        bestRoe: element.bestRoe
+        bestRoe: element.bestRoe,
       });
     } else {
       if (element.exchange === "bitmex") {
@@ -187,8 +185,8 @@ function processLadderData(
   }
   for (let index = 0; index < best10Participants.length; index++) {
     const element = best10Participants[index];
-    const indexInLadder = _.findIndex(ladderData.participants, function(o) {
-      return o.email == element.email || o.account == element.account;
+    const indexInLadder = _.findIndex(ladderData.participants, function (o) {
+      return o.email == element.email;
     });
     if (indexInLadder != -1) {
       ladderData.participants[indexInLadder].points +=
@@ -197,8 +195,8 @@ function processLadderData(
   }
   for (let index = 0; index < dsqLiqParticipants.length; index++) {
     const element = dsqLiqParticipants[index];
-    const indexInLadder = _.findIndex(ladderData.participants, function(o) {
-      return o.email == element.email || o.account == element.account;
+    const indexInLadder = _.findIndex(ladderData.participants, function (o) {
+      return o.email == element.email;
     });
     if (indexInLadder != -1) {
       ladderData.participants[indexInLadder].points +=
@@ -243,5 +241,5 @@ function compareRoes(a, b) {
 }
 
 module.exports = {
-  distributePointsForLadders
+  distributePointsForLadders,
 };

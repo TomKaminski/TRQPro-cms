@@ -15,8 +15,8 @@ const ETHCoin = "ETH";
 const EOSCoin = "EOS";
 const USDCoin = "USDT";
 
-function getAccountDictKey(account) {
-  return "bybit_" + account.toString();
+function getAccountDictKey(email) {
+  return "bybit_" + email;
 }
 
 function _checkIfRetarded(response, previousReadingDate) {
@@ -42,7 +42,7 @@ function processParticipantReading(
   symbols
 ) {
   if (response.inner.status === 200) {
-    let accDictKey = getAccountDictKey(response.inner.accInfo.user_id);
+    let accDictKey = getAccountDictKey(response.participant.email);
     let wallets = response.inner.wallets;
     const totalUsdt = _getTotalUSDT(
       symbols,
@@ -107,7 +107,6 @@ function processParticipantReading(
 
     readingData.participants[accDictKey] = {
       balance: totalUsdt,
-      account: response.inner.accInfo.user_id,
       deposits: response.inner.deposits,
       username: response.participant.username,
       email: response.participant.email,
@@ -124,9 +123,8 @@ function processParticipantReading(
       roes: nextRoes,
     };
   } else if (response.inner.status === 201) {
-    readingData.participants[
-      getAccountDictKey(response.inner.previousData.account)
-    ] = response.inner.previousData;
+    readingData.participants[getAccountDictKey(response.participant.email)] =
+      response.inner.previousData;
   } else {
     let { email, username } = response.participant;
     readingData.totallyEmptyAccounts.push({
@@ -338,7 +336,6 @@ function _transformApiKeyResponse(object) {
   let firstApiKey = object.result[0];
   return {
     expired_at: firstApiKey.expired_at,
-    user_id: firstApiKey.user_id,
     inviter_id: firstApiKey.inviter_id,
     read_only: firstApiKey.read_only,
   };

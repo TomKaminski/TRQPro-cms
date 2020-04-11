@@ -111,6 +111,12 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
       );
       if (value.exchange === "bitmex") {
         return bitmex_service.getParticipantCurrentWalletInfo(value, prevData);
+      } else if (value.exchange === "binance") {
+        return binance_service.getUserReading(
+          value,
+          prevData,
+          moment(leagueData.startDate).unix() * 1000
+        );
       } else {
         return bybit_service.getUserReading(
           value,
@@ -123,6 +129,12 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
     actions = leagueData.participants.map((participant) => {
       if (participant.exchange === "bitmex") {
         return bitmex_service.getParticipantCurrentWalletInfo(participant);
+      } else if (value.exchange === "binance") {
+        return binance_service.getUserReading(
+          value,
+          null,
+          moment(leagueData.startDate).unix() * 1000
+        );
       } else {
         return bybit_service.getUserReading(participant);
       }
@@ -159,6 +171,12 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
       responses.forEach((response) => {
         if (response.participant.exchange === "bitmex") {
           bitmex_service.processParticipantReading(
+            response,
+            readingData,
+            previousReadingFileData
+          );
+        } else if (response.participant.exchange === "binance") {
+          binance_service.processParticipantReading(
             response,
             readingData,
             previousReadingFileData
