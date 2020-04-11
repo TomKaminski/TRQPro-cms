@@ -276,7 +276,6 @@ module.exports = {
       );
       let lastReadingData = JSON.parse(rawFiledata);
 
-      console.log(lastReadingData.participants);
       let participantsArray = league_helper.getSortedParticipants(
         lastReadingData.participants
       );

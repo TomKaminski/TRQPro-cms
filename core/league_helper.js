@@ -49,6 +49,8 @@ function determineExchangeType(key) {
     return "bybit";
   } else if (key.includes("bitmex")) {
     return "bitmex";
+  } else if (key.includes("binance")) {
+    return "binance";
   }
 }
 

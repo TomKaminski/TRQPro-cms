@@ -9,6 +9,7 @@ const league_helper = require("./core/league_helper.js");
 const league_ladder = require("./core/league_ladder.js");
 const bitmex_service = require("./core/exchanges/bitmex/bitmex_service.js");
 const bybit_service = require("./core/exchanges/bybit/bybit_service.js");
+const binance_service = require("./core/exchanges/binance/binance_service.js");
 
 const dotenv = require("dotenv");
 const strapi = require("strapi");
@@ -129,9 +130,9 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
     actions = leagueData.participants.map((participant) => {
       if (participant.exchange === "bitmex") {
         return bitmex_service.getParticipantCurrentWalletInfo(participant);
-      } else if (value.exchange === "binance") {
+      } else if (participant.exchange === "binance") {
         return binance_service.getUserReading(
-          value,
+          participant,
           null,
           moment(leagueData.startDate).unix() * 1000
         );

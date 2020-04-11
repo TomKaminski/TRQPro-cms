@@ -1,4 +1,6 @@
 const client = require("./binance_client.js");
+const encrypt_decrypt = require("./../../encrypt_decrypt.js");
+const league_helper = require("./../../league_helper.js");
 
 function getAccountDictKey(email) {
   return "binance_" + email;
@@ -64,7 +66,7 @@ function processParticipantReading(
         : [];
       nextRoes.push(Math.round(roeCurrent * 1e2) / 1e2);
     } else {
-      if (startingBalance < 50) {
+      if (startingBalance < 30) {
         tooLowBalance = true;
       }
     }
