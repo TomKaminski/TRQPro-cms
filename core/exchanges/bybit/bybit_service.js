@@ -55,6 +55,7 @@ function processParticipantReading(
 
     var roeCurrent = 0;
     var isRekt = false;
+    var isZombie = false;
     var startingBalance = totalUsdt;
     var isRetarded = false;
     var nextRoes = [0];
@@ -67,10 +68,11 @@ function processParticipantReading(
         );
         console.log(response.participant.username);
 
-        let { email, username } = response.participant;
+        let { email, username, exchange } = response.participant;
         readingData.totallyEmptyAccounts.push({
           email,
           username,
+          exchange,
         });
         return;
       }
@@ -90,6 +92,9 @@ function processParticipantReading(
       isRekt =
         previousReadingFileData.participants[accDictKey].isRekt === true ||
         roeCurrent <= -99.0;
+
+      isZombie =
+        previousReadingFileData.participants[accDictKey].isZombie === true;
 
       isRetarded =
         previousReadingFileData.participants[accDictKey].isRetarded === true ||
@@ -128,11 +133,10 @@ function processParticipantReading(
       getAccountDictKey(response.inner.previousData.account)
     ] = response.inner.previousData;
   } else {
-    let { email, username } = response.participant;
-    readingData.totallyEmptyAccounts.push({
-      email,
-      username,
-    });
+    response.inner.previousData.isZombie = true;
+    readingData.participants[
+      getAccountDictKey(response.inner.previousData.account)
+    ] = response.inner.previousData;
     return;
   }
 }
@@ -264,6 +268,7 @@ async function getUserReading(participant, previousData, previousReadingDate) {
     return {
       inner: {
         status: 401,
+        previousData,
       },
       participant,
     };

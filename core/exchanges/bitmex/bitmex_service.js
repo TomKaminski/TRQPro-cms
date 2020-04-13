@@ -26,10 +26,11 @@ function processParticipantReading(
     if (!totalEntry) {
       console.log("Total entry not found: ", response.participant.username);
 
-      let { email, username } = response.participant;
+      let { email, username, exchange } = response.participant;
       readingData.totallyEmptyAccounts.push({
         email,
         username,
+        exchange,
       });
       return;
     }
@@ -38,6 +39,7 @@ function processParticipantReading(
     var startingBalance = totalEntry.marginBalance;
     var isRekt = false;
     var isRetarded = false;
+    var isZombie = false;
     var nextRoes = [0];
     var tooLowBalance = false;
 
@@ -50,10 +52,11 @@ function processParticipantReading(
         );
         console.log(response.participant.username);
 
-        let { email, username } = response.participant;
+        let { email, username, exchange } = response.participant;
         readingData.totallyEmptyAccounts.push({
           email,
           username,
+          exchange,
         });
         return;
       }
@@ -73,6 +76,9 @@ function processParticipantReading(
       isRekt =
         previousReadingFileData.participants[accDictKey].isRekt === true ||
         roeCurrent <= -99.0;
+
+      isZombie =
+        previousReadingFileData.participants[accDictKey].isZombie === true;
 
       isRetarded =
         previousReadingFileData.participants[accDictKey].isRetarded === true ||
@@ -106,6 +112,7 @@ function processParticipantReading(
       roe7d: null,
       roe14d: null,
       roeEnd: null,
+      isZombie,
       isRekt,
       isRetarded,
       tooLowBalance,
@@ -116,11 +123,10 @@ function processParticipantReading(
       getAccountDictKey(response.inner.previousData.account)
     ] = response.inner.previousData;
   } else {
-    let { email, username } = response.participant;
-    readingData.totallyEmptyAccounts.push({
-      email,
-      username,
-    });
+    response.inner.previousData.isZombie = true;
+    readingData.participants[
+      getAccountDictKey(response.inner.previousData.account)
+    ] = response.inner.previousData;
     return;
   }
 }
@@ -158,6 +164,7 @@ async function getParticipantCurrentWalletInfo(participant, previousData) {
     return {
       inner: {
         status: 401,
+        previousData,
       },
       participant,
     };
