@@ -33,10 +33,11 @@ function processParticipantReading(
         );
         console.log(response.participant.username);
 
-        let { email, username } = response.participant;
+        let { email, username, exchange } = response.participant;
         readingData.totallyEmptyAccounts.push({
           email,
           username,
+          exchange,
         });
         return;
       }
@@ -88,6 +89,7 @@ function processParticipantReading(
       roe7d: null,
       roe14d: null,
       roeEnd: null,
+      isZombie: false,
       isRekt,
       isRetarded,
       tooLowBalance,
@@ -97,11 +99,9 @@ function processParticipantReading(
     readingData.participants[getAccountDictKey(response.participant.email)] =
       response.inner.previousData;
   } else {
-    let { email, username } = response.participant;
-    readingData.totallyEmptyAccounts.push({
-      email,
-      username,
-    });
+    response.inner.previousData.isZombie = true;
+    readingData.participants[getAccountDictKey(response.participant.email)] =
+      response.inner.previousData;
     return;
   }
 }
@@ -196,6 +196,7 @@ async function getUserReading(participant, previousData, leagueStartDateInMs) {
     return {
       inner: {
         status: 401,
+        previousData,
       },
       participant,
     };
