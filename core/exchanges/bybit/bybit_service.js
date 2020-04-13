@@ -55,7 +55,6 @@ function processParticipantReading(
 
     var roeCurrent = 0;
     var isRekt = false;
-    var isZombie = false;
     var startingBalance = totalUsdt;
     var isRetarded = false;
     var nextRoes = [0];
@@ -93,9 +92,6 @@ function processParticipantReading(
         previousReadingFileData.participants[accDictKey].isRekt === true ||
         roeCurrent <= -99.0;
 
-      isZombie =
-        previousReadingFileData.participants[accDictKey].isZombie === true;
-
       isRetarded =
         previousReadingFileData.participants[accDictKey].isRetarded === true ||
         _checkIfRetarded(response, previousReadingFileData.readingDate);
@@ -123,6 +119,7 @@ function processParticipantReading(
       roe7d: null,
       roe14d: null,
       roeEnd: null,
+      isZombie: false,
       isRekt,
       isRetarded,
       tooLowBalance,
