@@ -2,12 +2,12 @@ const fs = require("fs");
 const league_helper = require("../../../core/league_helper.js");
 
 module.exports = {
-  selectorData: async ctx => {
+  selectorData: async (ctx) => {
     let files = getHistoricalReadingFiles();
     ctx.send(files);
   },
 
-  leagueData: async ctx => {
+  leagueData: async (ctx) => {
     let filename = getParam(ctx.request.url, "id");
 
     if (
@@ -25,10 +25,12 @@ module.exports = {
 
     let lastReadingData = JSON.parse(rawFiledata);
 
-    let participantsArray = getValues(lastReadingData.participants);
+    let participantsArray = league_helper.getSortedParticipants(
+      lastReadingData.participants
+    );
 
     var participantsResult = [];
-    participantsArray.forEach(participant => {
+    participantsArray.forEach((participant) => {
       delete participant.email;
 
       participantsResult.push(participant);
@@ -37,58 +39,8 @@ module.exports = {
     lastReadingData.participants = participantsResult;
 
     ctx.send(lastReadingData);
-  }
+  },
 };
-
-function getValues(obj) {
-  var values = [];
-  for (var key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      values.push(obj[key]);
-    }
-  }
-  return values.sort(compareRoes);
-}
-
-function compareRoes(a, b) {
-  if (a.isRetarded && b.isRetarded) {
-    return b.roes.length - a.roes.length < 0 ? -1 : 1;
-  }
-
-  if (a.isRekt && b.isRekt) {
-    return b.roes.length - a.roes.length < 0 ? -1 : 1;
-  }
-
-  if (a.tooLowBalance && b.tooLowBalance) {
-    return b.roeCurrent - a.roeCurrent;
-  }
-
-  if (a.isRetarded) {
-    return 1;
-  }
-
-  if (b.isRetarded) {
-    return -1;
-  }
-
-  if (a.tooLowBalance) {
-    return 1;
-  }
-
-  if (b.tooLowBalance) {
-    return -1;
-  }
-
-  if (a.isRekt) {
-    return 1;
-  }
-
-  if (b.isRekt) {
-    return -1;
-  }
-
-  return b.roeCurrent - a.roeCurrent;
-}
 
 function getHistoricalReadingFiles() {
   const dir = league_helper.createLeagueHistoryFolderPath();
