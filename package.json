@@ -27,6 +27,7 @@
     "moment": "^2.24.0",
     "node-schedule": "^1.3.2",
     "pg": "^7.18.2",
+    "sharp": "0.22.1",
     "strapi": "3.0.0-beta.19.4",
     "strapi-admin": "3.0.0-beta.19.4",
     "strapi-connector-bookshelf": "3.0.0-beta.19.4",
