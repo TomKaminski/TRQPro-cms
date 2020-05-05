@@ -118,7 +118,7 @@ function processParticipantReading(
       roe7d: null,
       roe14d: null,
       roeEnd: null,
-      isZombie: true,
+      isZombie: false,
       isRekt,
       isRetarded,
       tooLowBalance,
