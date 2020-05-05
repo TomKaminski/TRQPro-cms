@@ -117,10 +117,17 @@ function processParticipantReading(
     readingData.participants[getAccountDictKey(response.participant.email)] =
       response.inner.previousData;
   } else {
-    response.inner.previousData.isZombie = true;
-    readingData.participants[getAccountDictKey(response.participant.email)] =
-      response.inner.previousData;
-    return;
+    if (previousReadingFileData) {
+      response.inner.previousData.isZombie = true;
+      readingData.participants[getAccountDictKey(response.participant.email)] =
+        response.inner.previousData;
+    } else {
+      let { email, username } = response.participant;
+      readingData.totallyEmptyAccounts.push({
+        email,
+        username,
+      });
+    }
   }
 }
 
