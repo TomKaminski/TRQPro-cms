@@ -54,7 +54,7 @@
     "title_en": {
       "type": "string",
       "required": false,
-      "maxLength": 5
+      "minLength": 5
     }
   }
 }
