@@ -8,7 +8,10 @@
   },
   "options": {
     "increments": true,
-    "timestamps": ["created_at", "updated_at"],
+    "timestamps": [
+      "created_at",
+      "updated_at"
+    ],
     "comment": ""
   },
   "attributes": {
@@ -36,12 +39,12 @@
       "via": "articles"
     },
     "category": {
-      "model": "category",
-      "via": "articles"
+      "via": "articles",
+      "model": "category"
     },
     "tags": {
-      "collection": "tag",
       "via": "articles",
+      "collection": "tag",
       "dominant": true
     },
     "publishedAt": {

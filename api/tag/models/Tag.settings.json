@@ -22,8 +22,11 @@
       "type": "string"
     },
     "articles": {
-      "via": "tags",
-      "collection": "article"
+      "collection": "article",
+      "via": "tags"
+    },
+    "name_en": {
+      "type": "string"
     }
   }
 }
