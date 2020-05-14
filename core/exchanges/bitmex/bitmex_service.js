@@ -183,17 +183,17 @@ async function validateApiKeyAndSecret(apiKey, apiSecret) {
       }
       return {
         isSuccess: false,
-        error: "Konto nie jest podpięte pod odpowiedni reflink.",
+        error: "WRONG-REF-BITMEX",
       };
     }
     return {
       isSuccess: false,
-      error: "Podane klucze API są nieprawidłowe.",
+      error: "WRONG-API-KEYS",
     };
   } catch (error) {
     return {
       isSuccess: false,
-      error: "Podane klucze API są nieprawidłowe.",
+      error: "WRONG-API-KEYS",
     };
   }
 }

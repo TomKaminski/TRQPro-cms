@@ -8,16 +8,6 @@ const bitmex_service = require("../../../core/exchanges/bitmex/bitmex_service.js
 const binance_service = require("../../../core/exchanges/binance/binance_service.js");
 
 module.exports = {
-  testBinance: async (ctx) => {
-    ctx.send(
-      await binance_service.getUserReading(
-        { name: "Tomfly" },
-        null,
-        1586182500000
-      )
-    );
-  },
-
   indexSmallData: async (ctx) => {
     let rawdata = fs.readFileSync(league_helper.leagueInputDataFile);
     let leagueData = JSON.parse(rawdata);
@@ -170,7 +160,7 @@ module.exports = {
     ) {
       ctx.send({
         isValid: false,
-        error: "Zły identyfikator ligi.",
+        error: "WRONG-LEAGUE-ID",
       });
       return;
     }
@@ -309,7 +299,7 @@ async function validateApiKeyAndSecret(
   }
   return {
     isSuccess: false,
-    error: "Podane klucze API są nieprawidłowe.",
+    error: "WRONG-API-KEYS",
   };
 }
 
@@ -398,14 +388,14 @@ async function validateJoinLeagueData(
   ) {
     return {
       isValid: false,
-      error: "Nieprawidłowe dane.",
+      error: "WRONG-DATA",
     };
   }
 
   if (new Date(signingLimitDate) < new Date()) {
     return {
       isValid: false,
-      error: "Zapisy na wybraną ligę są zakończone.",
+      error: "LEAGUE-ENDED",
     };
   }
 
@@ -436,7 +426,7 @@ async function validateJoinLeagueData(
   ) {
     return {
       isValid: false,
-      error: "Niektóre dane powielają się z już zapisanym uczestnikiem.",
+      error: "DUPLICATED-DATA",
     };
   }
 

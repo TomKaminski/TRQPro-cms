@@ -126,14 +126,14 @@ async function validateApiKey(apiKey, apiSecret) {
     } else {
       return {
         isSuccess: false,
-        error: "Podane klucze API są nieprawidłowe.",
+        error: "WRONG-API-KEYS",
       };
     }
   } catch (error) {
     console.log(error);
     return {
       isSuccess: false,
-      error: "Podane klucze API są nieprawidłowe.",
+      error: "WRONG-API-KEYS",
     };
   }
 }

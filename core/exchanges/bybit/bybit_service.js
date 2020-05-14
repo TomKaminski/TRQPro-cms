@@ -160,20 +160,18 @@ async function validateApiKey(apiKey, apiSecret, leagueEndDate) {
       }
       return {
         isSuccess: false,
-        error:
-          "Podany klucz API nie jest ustawiony jako tylko do odczytu (readonly).",
+        error: "WRONG-PERMISSION-BYBIT",
       };
     } else {
       return {
         isSuccess: false,
-        error:
-          "Podany klucz API wygasa przed końcem ligi. Proszę wygenerować nowy klucz.",
+        error: "WRONG-VALID-UNTIL-DATE-BYBIT",
       };
     }
   } catch {
     return {
       isSuccess: false,
-      error: "Podane klucze API są nieprawidłowe.",
+      error: "WRONG-API-KEYS",
     };
   }
 }
