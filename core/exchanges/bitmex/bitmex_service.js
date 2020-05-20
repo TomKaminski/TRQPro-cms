@@ -117,7 +117,7 @@ function processParticipantReading(
     readingData.participants[getAccountDictKey(response.participant.email)] =
       response.inner.previousData;
   } else {
-    if (previousReadingFileData) {
+    if (previousReadingFileData && response.inner.previousData != null) {
       response.inner.previousData.isZombie = true;
       readingData.participants[getAccountDictKey(response.participant.email)] =
         response.inner.previousData;
@@ -155,6 +155,17 @@ async function getParticipantCurrentWalletInfo(participant, previousData) {
       participant.apiKey,
       decodedSecret
     );
+
+    if (response.status === 503) {
+      //Service Unavailable - ZOMBIE
+      return {
+        inner: {
+          status: 503,
+          previousData,
+        },
+        participant,
+      };
+    }
 
     return {
       inner: response,
