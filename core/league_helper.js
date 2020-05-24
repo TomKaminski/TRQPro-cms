@@ -76,6 +76,26 @@ function getArray(obj) {
   return values;
 }
 
+function compareLadderFiles(a, b, year) {
+  var today = new Date();
+  let fullYear = today.getFullYear().toString();
+  var quarter = Math.floor((today.getMonth() + 3) / 3);
+
+  if (year !== fullYear) {
+    return 1;
+  }
+
+  if (a.includes(year + "_")) {
+    return a.includes("_0" + quarter) ? -1 : 1;
+  }
+
+  if (b.includes(year + "_")) {
+    return b.includes("_0" + quarter) ? 1 : -1;
+  }
+
+  return 1;
+}
+
 function compareRoes(a, b) {
   if (a.isRetarded && b.isRetarded) {
     return b.roes.length - a.roes.length < 0 ? -1 : 1;
@@ -234,4 +254,5 @@ module.exports = {
   getArray,
   compareRoes,
   createLeagueLadderFolderPath,
+  compareLadderFiles,
 };

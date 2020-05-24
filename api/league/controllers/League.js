@@ -116,22 +116,26 @@ module.exports = {
       return;
     } else {
       var ladderArray = [];
-      files.forEach((fileName) => {
-        let rawFiledata = fs.readFileSync(
-          leagueLadderFolderPath + "/" + fileName
-        );
-        let ladderData = JSON.parse(rawFiledata);
+      files
+        .sort((a, b) => {
+          return league_helper.compareLadderFiles(a, b, year);
+        })
+        .forEach((fileName) => {
+          let rawFiledata = fs.readFileSync(
+            leagueLadderFolderPath + "/" + fileName
+          );
+          let ladderData = JSON.parse(rawFiledata);
 
-        let resultParticipants = [];
+          let resultParticipants = [];
 
-        ladderData.participants.forEach((participant) => {
-          delete participant.email;
-          resultParticipants.push(participant);
+          ladderData.participants.forEach((participant) => {
+            delete participant.email;
+            resultParticipants.push(participant);
+          });
+
+          ladderData.participants = resultParticipants;
+          ladderArray.push(ladderData);
         });
-
-        ladderData.participants = resultParticipants;
-        ladderArray.push(ladderData);
-      });
       ctx.send(ladderArray);
       return;
     }
