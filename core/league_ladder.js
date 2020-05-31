@@ -39,14 +39,16 @@ function distributePointsForLadders(data) {
     let participant = data.participants[key];
     let currentLeagueRoe = getRoe(
       participant.startingBalance,
-      participant.balance
+      participant.isRetarded ? participant.startingBalance : participant.balance
     );
     return {
       email: participant.email,
       username: participant.username,
       points: 0,
       startingBalanceSum: participant.startingBalance,
-      endingBalanceSum: participant.balance,
+      endingBalanceSum: participant.isRetarded
+        ? participant.startingBalance
+        : participant.balance,
       exchange: determineExchangeType(key),
       leagues: 1,
       overallRoe: currentLeagueRoe,
@@ -144,25 +146,22 @@ function processLadderData(
     const indexInLadder = _.findIndex(ladderData.participants, function (o) {
       return o.email == element.email || o.username == element.username;
     });
+    const isBitmex = element.exchange === "bitmex";
     if (indexInLadder == -1) {
       ladderData.participants.push({
         email: element.email,
         username: element.username,
         points: 0,
-        startingBalanceSumUSD:
-          element.exchange === "bitmex" ? 0 : element.startingBalanceSum,
-        endingBalanceSumUSD:
-          element.exchange === "bitmex" ? 0 : element.endingBalanceSum,
-        startingBalanceSum:
-          element.exchange === "bitmex" ? element.startingBalanceSum : 0,
-        endingBalanceSum:
-          element.exchange === "bitmex" ? element.endingBalanceSum : 0,
+        startingBalanceSumUSD: isBitmex ? 0 : element.startingBalanceSum,
+        endingBalanceSumUSD: isBitmex ? 0 : element.endingBalanceSum,
+        startingBalanceSum: isBitmex ? element.startingBalanceSum : 0,
+        endingBalanceSum: isBitmex ? element.endingBalanceSum : 0,
         leagues: 1,
         overallRoe: element.overallRoe,
         bestRoe: element.bestRoe,
       });
     } else {
-      if (element.exchange === "bitmex") {
+      if (isBitmex) {
         ladderData.participants[indexInLadder].startingBalanceSum +=
           element.startingBalanceSum;
         ladderData.participants[indexInLadder].endingBalanceSum +=
