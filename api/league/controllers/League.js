@@ -257,7 +257,7 @@ module.exports = {
     let endDate = moment(new Date(leagueData.endDate));
     let now = moment(new Date());
 
-    if (files.length === 0 || endDate.diff(now, "days") <= -3) {
+    if (files.length === 0 || endDate.diff(now, "days") <= -1) {
       ctx.send(tryGetNearestComingLeague());
     } else {
       let lastFileName = files[files.length - 1];
