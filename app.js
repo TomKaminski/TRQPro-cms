@@ -200,7 +200,10 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
       if (isLastReading) {
         readingData = league_helper.getEndRoe(readingData, filesInfo);
         if (leagueData.includeInRanking) {
-          league_ladder.distributePointsForLadders(readingData);
+          league_ladder.distributePointsForLadders(
+            readingData,
+            leagueData.quarter
+          );
         }
         readingData.hasEnded = true;
       } else {

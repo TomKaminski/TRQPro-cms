@@ -31,7 +31,7 @@ function determineExchangeType(key) {
   }
 }
 
-function distributePointsForLadders(data) {
+function distributePointsForLadders(data, quarter) {
   let dsqLiqParticipants = getDSQLIQParticipants(data);
   let best10Participants = getBest10Participants(data);
 
@@ -63,7 +63,7 @@ function distributePointsForLadders(data) {
   );
 
   distributePointsForQuarterLadder(
-    league_helper.getCurrentQuarter(),
+    quarter,
     baseData,
     best10Participants,
     dsqLiqParticipants
@@ -227,7 +227,9 @@ function getBest10Participants(data) {
   let participantsArray = league_helper.getSortedParticipants(
     data.participants
   );
-  return participantsArray.slice(0, 10);
+  return participantsArray
+    .filter((participant) => participant.isZombie === false)
+    .slice(0, 10);
 }
 
 function compareRoes(a, b) {

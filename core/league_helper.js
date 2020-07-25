@@ -13,11 +13,6 @@ function createLeagueFilePath(identifier, fileName, appendJsonExtension) {
   return filePath;
 }
 
-function getCurrentQuarter() {
-  var today = new Date();
-  return Math.floor((today.getMonth() + 3) / 3);
-}
-
 function createLeagueFolderPath(identifier) {
   return "./league_data/" + identifier;
 }
@@ -247,7 +242,6 @@ module.exports = {
   createLeagueFolderPath,
   leagueInputDataFile,
   callForLeagueDataFile,
-  getCurrentQuarter,
   createLeagueLadderFilePath,
   createLeagueHistoryFolderPath,
   getSortedParticipants,
