@@ -167,6 +167,25 @@ function createReadingFileName(date) {
   return "reading_" + datestring;
 }
 
+function changeZombieToDSQOnLeagueEnd(readingData) {
+  let participantsToCompute = _.omitBy(
+    readingData.participants,
+    (o) => o.isRekt || o.isRetarded || o.tooLowBalance
+  );
+
+  for (var key in participantsToCompute) {
+    if (
+      readingData.participants.hasOwnProperty(key) &&
+      readingData.participants[key].isZombie === true
+    ) {
+      readingData.participants[key].isZombie = false;
+      readingData.participants[key].isRetarded = true;
+    }
+  }
+
+  return readingData;
+}
+
 function getDayRoe(readingData, files, dayRoe, isEndRoe) {
   if (files && files.length > dayRoe - 1) {
     let index = isEndRoe ? 0 : files.length - dayRoe;
@@ -249,4 +268,5 @@ module.exports = {
   compareRoes,
   createLeagueLadderFolderPath,
   compareLadderFiles,
+  changeZombieToDSQOnLeagueEnd,
 };

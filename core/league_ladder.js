@@ -227,9 +227,7 @@ function getBest10Participants(data) {
   let participantsArray = league_helper.getSortedParticipants(
     data.participants
   );
-  return participantsArray
-    .filter((participant) => participant.isZombie === false)
-    .slice(0, 10);
+  return participantsArray.slice(0, 10);
 }
 
 function compareRoes(a, b) {

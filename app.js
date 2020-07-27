@@ -198,6 +198,7 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
       readingData = league_helper.get14dRoe(readingData, filesInfo);
 
       if (isLastReading) {
+        readingData = league_helper.changeZombieToDSQOnLeagueEnd(readingData);
         readingData = league_helper.getEndRoe(readingData, filesInfo);
         if (leagueData.includeInRanking) {
           league_ladder.distributePointsForLadders(
