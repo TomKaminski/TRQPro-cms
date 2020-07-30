@@ -199,6 +199,9 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
 
       if (isLastReading) {
         readingData = league_helper.changeZombieToDSQOnLeagueEnd(readingData);
+        readingData = league_helper.changeIdleAccountsToDSQOnLeagueEnd(
+          readingData
+        );
         readingData = league_helper.getEndRoe(readingData, filesInfo);
         if (leagueData.includeInRanking) {
           league_ladder.distributePointsForLadders(

@@ -186,6 +186,26 @@ function changeZombieToDSQOnLeagueEnd(readingData) {
   return readingData;
 }
 
+function changeIdleAccountsToDSQOnLeagueEnd(readingData) {
+  let participantsToCompute = _.omitBy(
+    readingData.participants,
+    (o) => !o.roes.every((item) => item === 0)
+  );
+
+  for (var key in participantsToCompute) {
+    if (
+      readingData.participants.hasOwnProperty(key) &&
+      !readingData.participants[key].isRekt &&
+      !readingData.participants[key].isRetarded &&
+      !readingData.participants[key].tooLowBalance
+    ) {
+      readingData.participants[key].isRetarded = true;
+    }
+  }
+
+  return readingData;
+}
+
 function getDayRoe(readingData, files, dayRoe, isEndRoe) {
   if (files && files.length > dayRoe - 1) {
     let index = isEndRoe ? 0 : files.length - dayRoe;
@@ -269,4 +289,5 @@ module.exports = {
   createLeagueLadderFolderPath,
   compareLadderFiles,
   changeZombieToDSQOnLeagueEnd,
+  changeIdleAccountsToDSQOnLeagueEnd,
 };
