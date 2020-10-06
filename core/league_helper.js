@@ -40,11 +40,11 @@ function createLeagueHistoryFolderPath() {
 }
 
 function determineExchangeType(key) {
-  if (key.includes("bybit")) {
+  if (key.includes("bybit_")) {
     return "bybit";
-  } else if (key.includes("bitmex")) {
+  } else if (key.includes("bitmex_")) {
     return "bitmex";
-  } else if (key.includes("binance")) {
+  } else if (key.includes("binance_")) {
     return "binance";
   }
 }
