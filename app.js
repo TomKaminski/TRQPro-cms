@@ -116,7 +116,7 @@ function createReadingFile(leagueData, previousReadingFileData, filesInfo) {
         return binance_service.getUserReading(
           value,
           prevData,
-          moment(leagueData.startDate).unix() * 1000
+          moment(leagueData.startDate).add(1, "days").unix() * 1000 //TODO: Remove +1 on November league
         );
       } else {
         return bybit_service.getUserReading(
