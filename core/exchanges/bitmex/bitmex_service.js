@@ -117,7 +117,7 @@ function processParticipantReading(
     readingData.participants[getAccountDictKey(response.participant.email)] =
       response.inner.previousData;
   } else {
-    if (previousReadingFileData && response.inner.previousData != null) {
+    if (previousReadingFileData && response.inner.previousData) {
       response.inner.previousData.isZombie = true;
       readingData.participants[getAccountDictKey(response.participant.email)] =
         response.inner.previousData;
