@@ -11,6 +11,18 @@ function _checkIfRetarded(response) {
   //return response.inner.transfer.length > 0;
 }
 
+function _calculateIncomeValue(transfer) {
+  if (transfer.length > 0) {
+    var incomeTotal = 0;
+    transfer.forEach(incomeEntry => {
+      incomeTotal += parseFloat(incomeEntry.income);
+    });
+    return incomeTotal;
+  } else {
+    return 0
+  }
+}
+
 function processParticipantReading(
   response,
   readingData,
@@ -45,7 +57,7 @@ function processParticipantReading(
 
       roeCurrent = league_helper.getRoe(
         previousReadingFileData.participants[accDictKey].startingBalance,
-        totalUsdt
+        totalUsdt + (response.inner.income * -1)
       );
 
       startingBalance =
@@ -75,6 +87,7 @@ function processParticipantReading(
 
     readingData.participants[accDictKey] = {
       balance: totalUsdt,
+      incomeOutcome: response.inner.income,
       deposits: response.inner.transfer,
       username: response.participant.username,
       email: response.participant.email,
@@ -189,6 +202,8 @@ async function getUserReading(participant, previousData, leagueStartDateInMs) {
       await _getAccountInfo(apiKey, apiSecret)
     );
 
+    let income = _calculateIncomeValue(transfer);
+
     return {
       inner: {
         status: 200,
@@ -196,6 +211,7 @@ async function getUserReading(participant, previousData, leagueStartDateInMs) {
         realizedPnl,
         balance,
         transfer,
+        income
       },
       participant,
     };

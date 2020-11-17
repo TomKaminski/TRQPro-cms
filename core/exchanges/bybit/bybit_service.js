@@ -60,6 +60,7 @@ function processParticipantReading(
     var isRetarded = false;
     var nextRoes = [0];
     var tooLowBalance = false;
+    var incomeOutcome = 0;
 
     if (previousReadingFileData) {
       if (!previousReadingFileData.participants[accDictKey]) {
@@ -77,9 +78,11 @@ function processParticipantReading(
         return;
       }
 
+      incomeOutcome = 0; //TODO: process deposits/withdrawals from reading
+
       roeCurrent = league_helper.getRoe(
         previousReadingFileData.participants[accDictKey].startingBalance,
-        totalUsdt
+        totalUsdt + (incomeOutcome * -1)
       );
 
       startingBalance =
@@ -109,6 +112,7 @@ function processParticipantReading(
 
     readingData.participants[accDictKey] = {
       balance: totalUsdt,
+      incomeOutcome,
       deposits: response.inner.deposits,
       username: response.participant.username,
       email: response.participant.email,
