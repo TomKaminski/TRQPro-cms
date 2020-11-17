@@ -20,7 +20,7 @@ function processParticipantReading(
 ) {
   if (response.inner.status === 200) {
     let depositEntry = _filterElementByKey(response.inner.data, "Deposit");
-    let transferEntry = _filterElementByKey(response.inner.data, "Transfer");
+    let withdrawalEntry = _filterElementByKey(response.inner.data, "Withdrawal");
     let totalEntry = _filterElementByKey(response.inner.data, "Total");
 
     if (!totalEntry) {
@@ -37,11 +37,14 @@ function processParticipantReading(
 
     var roeCurrent = 0;
     var startingBalance = totalEntry.marginBalance;
+    var startingDeposits = depositEntry && depositEntry.amount ? depositEntry.amount : 0;
+    var startingWithdrawals = withdrawalEntry && withdrawalEntry.amount ? withdrawalEntry.amount : 0;
+
     var isRekt = false;
-    var isRetarded = false;
     var nextRoes = [0];
     var tooLowBalance = false;
     var incomeOutcome = 0;
+    
 
     let accDictKey = getAccountDictKey(response.participant.email);
 
@@ -61,15 +64,19 @@ function processParticipantReading(
         return;
       }
 
-      incomeOutcome = 0; //TODO: process deposits/withdrawals from reading
+      startingBalance = previousReadingFileData.participants[accDictKey].startingBalance;
+      startingDeposits = previousReadingFileData.participants[accDictKey].startingDeposits;
+      startingWithdrawals = previousReadingFileData.participants[accDictKey].startingWithdrawals;
+
+      let diffDeposits = (depositEntry && depositEntry.amount ? depositEntry.amount : startingDeposits) - startingDeposits;
+      let diffWithdrawals = (withdrawalEntry && withdrawalEntry.amount ? withdrawalEntry.amount : startingWithdrawals) - startingWithdrawals;
+
+      incomeOutcome = diffDeposits + diffWithdrawals;
 
       roeCurrent = league_helper.getRoe(
         previousReadingFileData.participants[accDictKey].startingBalance,
         totalEntry.marginBalance + (incomeOutcome * -1)
       );
-
-      startingBalance =
-        previousReadingFileData.participants[accDictKey].startingBalance;
 
       tooLowBalance =
         previousReadingFileData.participants[accDictKey].tooLowBalance ===
@@ -78,14 +85,6 @@ function processParticipantReading(
       isRekt =
         previousReadingFileData.participants[accDictKey].isRekt === true ||
         roeCurrent <= -99.0;
-
-      isRetarded =
-        previousReadingFileData.participants[accDictKey].isRetarded === true ||
-        _checkIfRetarded(
-          previousReadingFileData.participants[accDictKey],
-          depositEntry,
-          transferEntry
-        );
 
       nextRoes = previousReadingFileData.participants[accDictKey].roes
         ? previousReadingFileData.participants[accDictKey].roes
@@ -100,20 +99,22 @@ function processParticipantReading(
     readingData.participants[accDictKey] = {
       balance: totalEntry.marginBalance,
       incomeOutcome,
-      deposit: depositEntry,
-      transfer: transferEntry,
+      depositAmount: depositEntry && depositEntry.amount ? depositEntry.amount : 0,
+      withdrawalAmount: withdrawalEntry && withdrawalEntry.amount ? withdrawalEntry.amount : 0,
       username: response.participant.username,
       email: response.participant.email,
-      startingBalance: startingBalance,
-      roeCurrent: roeCurrent,
+      startingBalance,
+      startingDeposits,
+      startingWithdrawals,
+      roeCurrent,
       roe1d: null,
       roe3d: null,
       roe7d: null,
       roe14d: null,
       roeEnd: null,
       isZombie: false,
+      isRetarded: false,
       isRekt,
-      isRetarded,
       tooLowBalance,
       roes: nextRoes,
     };
@@ -160,6 +161,8 @@ async function getParticipantCurrentWalletInfo(participant, previousData) {
       decodedSecret
     );
 
+    console.log(response.data);
+
     if (response.status === 503) {
       //Service Unavailable - ZOMBIE
       return {
@@ -176,6 +179,7 @@ async function getParticipantCurrentWalletInfo(participant, previousData) {
       participant,
     };
   } catch (error) {
+    console.log(error);
     return {
       inner: {
         status: 401,

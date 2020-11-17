@@ -6,11 +6,6 @@ function getAccountDictKey(email) {
   return "binance_" + email;
 }
 
-function _checkIfRetarded(response) {
-  return false
-  //return response.inner.transfer.length > 0;
-}
-
 function _calculateIncomeValue(transfer) {
   if (transfer.length > 0) {
     var incomeTotal = 0;
@@ -35,7 +30,6 @@ function processParticipantReading(
     var roeCurrent = 0;
     var isRekt = false;
     var startingBalance = totalUsdt;
-    var isRetarded = false;
     var nextRoes = [0];
     var tooLowBalance = false;
 
@@ -71,10 +65,6 @@ function processParticipantReading(
         previousReadingFileData.participants[accDictKey].isRekt === true ||
         roeCurrent <= -99.0;
 
-      isRetarded =
-        previousReadingFileData.participants[accDictKey].isRetarded === true ||
-        _checkIfRetarded(response);
-
       nextRoes = previousReadingFileData.participants[accDictKey].roes
         ? previousReadingFileData.participants[accDictKey].roes
         : [];
@@ -104,8 +94,8 @@ function processParticipantReading(
       roe14d: null,
       roeEnd: null,
       isZombie: false,
+      isRetarded: false,
       isRekt,
-      isRetarded,
       tooLowBalance,
       roes: nextRoes,
     };
