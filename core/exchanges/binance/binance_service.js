@@ -7,7 +7,8 @@ function getAccountDictKey(email) {
 }
 
 function _checkIfRetarded(response) {
-  return response.inner.transfer.length > 0;
+  return false
+  //return response.inner.transfer.length > 0;
 }
 
 function processParticipantReading(

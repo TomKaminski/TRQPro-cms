@@ -20,19 +20,20 @@ function getAccountDictKey(email) {
 }
 
 function _checkIfRetarded(response, previousReadingDate) {
-  let momentDate = moment(previousReadingDate).utc();
+  return false;
+  // let momentDate = moment(previousReadingDate).utc();
 
-  if (response.inner.deposits.length == 0) {
-    return false;
-  } else {
-    let possibleDateIndex = _.findIndex(response.inner.deposits, function (
-      depo
-    ) {
-      let depoMoment = moment(depo.exec_time);
-      return depoMoment > momentDate;
-    });
-    return possibleDateIndex != -1;
-  }
+  // if (response.inner.deposits.length == 0) {
+  //   return false;
+  // } else {
+  //   let possibleDateIndex = _.findIndex(response.inner.deposits, function (
+  //     depo
+  //   ) {
+  //     let depoMoment = moment(depo.exec_time);
+  //     return depoMoment > momentDate;
+  //   });
+  //   return possibleDateIndex != -1;
+  // }
 }
 
 function processParticipantReading(

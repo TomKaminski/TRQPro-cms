@@ -236,10 +236,11 @@ async function validateRefferal(participant, apiSecret) {
 }
 
 function _checkIfRetarded(previousEntry, depositEntry, transferEntry) {
-  return !(
-    _.isEqual(previousEntry.deposit, depositEntry) &&
-    _.isEqual(previousEntry.transfer, transferEntry)
-  );
+  return false
+  // return !(
+  //   _.isEqual(previousEntry.deposit, depositEntry) &&
+  //   _.isEqual(previousEntry.transfer, transferEntry)
+  // );
 }
 
 function _filterElementByKey(response, key) {
