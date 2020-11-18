@@ -232,8 +232,8 @@ function getDayRoe(readingData, files, dayRoe, isEndRoe) {
       ) {
         let roePropName = isEndRoe ? "roeEnd" : "roe" + dayRoe + "d";
         readingData.participants[key][roePropName] = getRoe(
-          historicalData.participants[key].balance,
-          readingData.participants[key].balance
+          historicalData.participants[key].balance + (historicalData.participants[key].incomeOutcome * -1),
+          readingData.participants[key].balance + (readingData.participants[key].incomeOutcome * -1)
         );
       }
     }
