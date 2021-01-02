@@ -89,7 +89,7 @@ function processParticipantReading(
         : [];
       nextRoes.push(Math.round(roeCurrent * 1e2) / 1e2);
     } else {
-      if (startingBalance < 500000) {
+      if (startingBalance < 300000) {
         tooLowBalance = true;
       }
     }
