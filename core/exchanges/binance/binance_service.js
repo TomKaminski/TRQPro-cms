@@ -7,7 +7,8 @@ function getAccountDictKey(email) {
 }
 
 function _checkIfRetarded(response) {
-  return response.inner.transfer.length > 0;
+  let filteredTransfers = response.inner.transfer.filter(entry => entry.asset != "BNB")
+  return filteredTransfers.length > 0;
 }
 
 function processParticipantReading(
