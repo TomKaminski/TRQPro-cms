@@ -67,12 +67,21 @@ module.exports = {
       .filter((item) => item.exchange === "bitmex")
       .map(validateRefferal);
 
+    var usersBinance = comingLeagues[key].participants
+      .filter((item) => item.exchange === "binance").map((value) => {
+        return {
+          username: value.username,
+          accountId: value.accountId
+        }
+      })
+
     let responsesBybit = await Promise.all(actionsBybit);
     let responsesBitmex = await Promise.all(actionsBitmex);
 
     ctx.send({
       BYBIT_ACCOUNTS: responsesBybit,
       BITMEX_ACCOUNTS: responsesBitmex,
+      BINANCE_ACCOUNTS: usersBinance
     });
   },
 
@@ -401,7 +410,7 @@ async function validateJoinLeagueData(
   if (data.exchange == "binance" && isNullOrEmpty(data.accountId)) {
     return {
       isValid: false,
-      error: "WRONG-DATA",
+      error: "MISSING-BINANCE-ACCOUNT-ID",
     };
   }
 
