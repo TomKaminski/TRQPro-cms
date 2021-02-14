@@ -18,7 +18,7 @@
     "eslint-plugin-react": "^7.18.3"
   },
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "bybit_api": "^1.0.0",
     "dotenv": "^8.2.0",
     "knex": "^0.20.10",
