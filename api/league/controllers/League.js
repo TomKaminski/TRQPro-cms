@@ -202,6 +202,7 @@ module.exports = {
                 username: jsonBody.nickname,
                 email: jsonBody.email,
                 apiKey: jsonBody.apiKey,
+                accountId: jsonBody.accountId,
                 apiSecret: validityResult.hashedApiSecret,
                 exchange: jsonBody.exchange,
               });
@@ -232,6 +233,7 @@ module.exports = {
           username: jsonBody.nickname,
           email: jsonBody.email,
           apiKey: jsonBody.apiKey,
+          accountId: jsonBody.accountId,
           apiSecret: validatedData.hashedApiSecret,
           exchange: jsonBody.exchange,
         });
@@ -390,6 +392,13 @@ async function validateJoinLeagueData(
     isNullOrEmpty(data.email) ||
     isNullOrEmpty(data.exchange)
   ) {
+    return {
+      isValid: false,
+      error: "WRONG-DATA",
+    };
+  }
+
+  if (data.exchange == "binance" && isNullOrEmpty(data.accountId)) {
     return {
       isValid: false,
       error: "WRONG-DATA",
